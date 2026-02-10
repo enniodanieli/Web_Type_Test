@@ -49,6 +49,47 @@ body {
 .control-group input[type="range"] {
   width: 100%;
   max-width: 400px;
+  height: 44px; /* Bigger touch target */
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+
+/* Bigger thumb for touch */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  background: #333;
+  cursor: pointer;
+  border-radius: 50%;
+  margin-top: -10px; /* Add this line */
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  background: #333;
+  cursor: pointer;
+  border-radius: 50%;
+  border: none;
+  margin-top: -10px; /* Add this line */
+}
+
+/* Track styling */
+input[type="range"]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 4px;
+  background: #ddd;
+  border-radius: 2px;
+}
+
+input[type="range"]::-moz-range-track {
+  width: 100%;
+  height: 4px;
+  background: #ddd;
+  border-radius: 2px;
 }
 
 .size-display {
