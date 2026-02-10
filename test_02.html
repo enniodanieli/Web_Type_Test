@@ -17,12 +17,17 @@
 
 body {
   font-family: 'NoIdea', monospace;
-  font-size: 14px;
+  font-size: 12px;
   line-height: 1.6;
   padding: 40px 20px 100px 20px;
   max-width: 680px;
   margin: 0 auto;
   -webkit-text-size-adjust: 100%;
+}
+
+/* Stylistic set activated */
+body.alt-style {
+  font-feature-settings: "ss01";
 }
 
 /* Size controls */
@@ -49,7 +54,7 @@ body {
 .control-group input[type="range"] {
   width: 100%;
   max-width: 400px;
-  height: 44px; /* Bigger touch target */
+  height: 44px;
   -webkit-appearance: none;
   appearance: none;
   background: transparent;
@@ -64,7 +69,7 @@ input[type="range"]::-webkit-slider-thumb {
   background: #333;
   cursor: pointer;
   border-radius: 50%;
-  margin-top: -10px; /* Add this line */
+  margin-top: -10px;
 }
 
 input[type="range"]::-moz-range-thumb {
@@ -74,7 +79,7 @@ input[type="range"]::-moz-range-thumb {
   cursor: pointer;
   border-radius: 50%;
   border: none;
-  margin-top: -10px; /* Add this line */
+  margin-top: -10px;
 }
 
 /* Track styling */
@@ -100,6 +105,25 @@ input[type="range"]::-moz-range-track {
   min-width: 40px;
 }
 
+/* Style toggle button */
+.style-toggle {
+  margin-bottom: 15px;
+}
+
+.style-toggle button {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-size: 12px;
+  padding: 8px 16px;
+  border: 1px solid #333;
+  background: white;
+  cursor: pointer;
+}
+
+.style-toggle button.active {
+  background: #333;
+  color: white;
+}
+
 /* Editable areas */
 [contenteditable] {
   outline: none;
@@ -119,7 +143,7 @@ input[type="range"]::-moz-range-track {
 }
 
 .body-area {
-  font-size: 14px;
+  font-size: 12px;
   margin-bottom: 20px;
 }
 
@@ -157,6 +181,10 @@ input[type="range"]::-moz-range-track {
 <body>
 
 <div class="controls">
+  <div class="style-toggle">
+    <button onclick="toggleStyle()" id="style-btn">alt style (off)</button>
+  </div>
+
   <div class="control-group">
     <label>
       h1 size: <span class="size-display" id="h1-size">24px</span>
@@ -166,9 +194,9 @@ input[type="range"]::-moz-range-track {
   
   <div class="control-group">
     <label>
-      body size: <span class="size-display" id="body-size">14px</span>
+      body size: <span class="size-display" id="body-size">12px</span>
     </label>
-    <input type="range" min="10" max="24" value="14" id="body-slider">
+    <input type="range" min="10" max="24" value="12" id="body-slider">
   </div>
 </div>
 
@@ -178,7 +206,7 @@ input[type="range"]::-moz-range-track {
      spellcheck="false"
      autocorrect="off"
      autocapitalize="off">
-Hello, peoples
+hello, world.
 </div>
 
 <div class="body-area" 
@@ -187,11 +215,18 @@ Hello, peoples
      spellcheck="false"
      autocorrect="off"
      autocapitalize="off">
-The quick brown fox jumps over the lazy dog
+the quick brown fox jumps over the lazy dog
 abcdefghijklmnopqrstuvwxyz
+0123456789 !@#$%^&*()
 
 pack my box with five dozen liquor jugs
 sphinx of black quartz judge my vow
+
+function calculatetotal(items) {
+  return items.reduce((sum, item) => {
+    return sum + item.price * item.quantity;
+  }, 0);
+}
 </div>
 
 <button class="paste-button" onclick="pasteFromClipboard()">paste</button>
@@ -205,6 +240,20 @@ document.querySelectorAll('[contenteditable]').forEach(element => {
     document.execCommand('insertText', false, text);
   });
 });
+
+// Toggle stylistic set
+function toggleStyle() {
+  document.body.classList.toggle('alt-style');
+  
+  const btn = document.getElementById('style-btn');
+  if (document.body.classList.contains('alt-style')) {
+    btn.textContent = 'alt style (on)';
+    btn.classList.add('active');
+  } else {
+    btn.textContent = 'alt style (off)';
+    btn.classList.remove('active');
+  }
+}
 
 // H1 slider
 const h1Slider = document.getElementById('h1-slider');
@@ -234,7 +283,6 @@ function pasteFromClipboard() {
   bodyArea.textContent = '';
   bodyArea.focus();
   
-  // Trigger paste command directly
   document.execCommand('paste');
 }
 </script>
