@@ -1,167 +1,202 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    />
-    <style>
-      @font-face {
-        font-family: "NoIdea";
-        src: url("NoIdea-Mono.woff2") format("woff2");
-      }
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<style>
+@font-face {
+  font-family: 'NoIdea';
+  src: url('NoIdea-Mono.woff2') format('woff2');
+}
 
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
+* { 
+  margin: 0; 
+  padding: 0; 
+  box-sizing: border-box; 
+}
 
-      body {
-        font-family: "NoIdea", monospace;
-        font-size: 14px;
-        line-height: 1.6;
-        padding: 40px 20px;
-        max-width: 680px;
-        margin: 0 auto;
-        -webkit-text-size-adjust: 100%;
-      }
+body {
+  font-family: 'NoIdea', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  padding: 40px 20px 100px 20px;
+  max-width: 680px;
+  margin: 0 auto;
+  -webkit-text-size-adjust: 100%;
+}
 
-      /* Size controls */
-      .controls {
-        position: sticky;
-        top: 0;
-        background: white;
-        padding: 15px 0;
-        margin-bottom: 30px;
-        border-bottom: 1px solid #ddd;
-      }
+/* Size controls */
+.controls {
+  position: sticky;
+  top: 0;
+  background: white;
+  padding: 15px 0;
+  margin-bottom: 30px;
+  border-bottom: 1px solid #ddd;
+}
 
-      .control-group {
-        margin-bottom: 15px;
-      }
+.control-group {
+  margin-bottom: 15px;
+}
 
-      .control-group label {
-        font-family:
-          -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-        font-size: 12px;
-        display: block;
-        margin-bottom: 5px;
-      }
+.control-group label {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-size: 12px;
+  display: block;
+  margin-bottom: 5px;
+}
 
-      .control-group input[type="range"] {
-        width: 100%;
-        max-width: 400px;
-      }
+.control-group input[type="range"] {
+  width: 100%;
+  max-width: 400px;
+}
 
-      .size-display {
-        font-family:
-          -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-        font-size: 12px;
-        display: inline-block;
-        margin-left: 10px;
-        min-width: 40px;
-      }
+.size-display {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-size: 12px;
+  display: inline-block;
+  margin-left: 10px;
+  min-width: 40px;
+}
 
-      /* Editable areas */
-      [contenteditable] {
-        outline: none;
-        min-height: 1.5em;
-        cursor: text;
-      }
+/* Editable areas */
+[contenteditable] {
+  outline: none;
+  min-height: 1.5em;
+  cursor: text;
+}
 
-      [contenteditable]:empty:before {
-        content: attr(data-placeholder);
-        color: #999;
-      }
+[contenteditable]:empty:before {
+  content: attr(data-placeholder);
+  color: #999;
+}
 
-      .h1-area {
-        font-size: 24px;
-        margin-bottom: 20px;
-        font-weight: normal;
-      }
+.h1-area {
+  font-size: 24px;
+  margin-bottom: 20px;
+  font-weight: normal;
+}
 
-      .body-area {
-        font-size: 14px;
-        margin-bottom: 20px;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="controls">
-      <div class="control-group">
-        <label>
-          h1 size: <span class="size-display" id="h1-size">24px</span>
-        </label>
-        <input type="range" min="10" max="56" value="24" id="h1-slider" />
-      </div>
+.body-area {
+  font-size: 14px;
+  margin-bottom: 20px;
+}
 
-      <div class="control-group">
-        <label>
-          body size: <span class="size-display" id="body-size">14px</span>
-        </label>
-        <input type="range" min="10" max="24" value="14" id="body-slider" />
-      </div>
-    </div>
+/* Floating paste button */
+.paste-button {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  transition: all 0.2s ease;
+  z-index: 1000;
+}
 
-    <div
-      class="h1-area"
-      contenteditable="true"
-      data-placeholder="type h1 here"
-      spellcheck="false"
-      autocorrect="off"
-      autocapitalize="off"
-    >
-      Hello, bichas.
-    </div>
+.paste-button:hover {
+  background: #000;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+  transform: scale(1.05);
+}
 
-    <div
-      class="body-area"
-      contenteditable="true"
-      data-placeholder="type body text here"
-      spellcheck="false"
-      autocorrect="off"
-      autocapitalize="off"
-    >
-      the quick brown fox jumps over the lazy dog abcdefghijklmnopqrstuvwxyz
-      0123456789 !@#$%^&*() pack my box with five dozen liquor jugs sphinx of
-      black quartz judge my vow function calculatetotal(items) { return
-      items.reduce((sum, item) => { return sum + item.price * item.quantity; },
-      0); }
-    </div>
+.paste-button:active {
+  transform: scale(0.95);
+}
+</style>
+</head>
+<body>
 
-    <script>
-      // Strip formatting on paste
-      document.querySelectorAll("[contenteditable]").forEach((element) => {
-        element.addEventListener("paste", function (e) {
-          e.preventDefault();
-          const text = e.clipboardData.getData("text/plain");
-          document.execCommand("insertText", false, text);
-        });
-      });
+<div class="controls">
+  <div class="control-group">
+    <label>
+      h1 size: <span class="size-display" id="h1-size">24px</span>
+    </label>
+    <input type="range" min="10" max="56" value="24" id="h1-slider">
+  </div>
+  
+  <div class="control-group">
+    <label>
+      body size: <span class="size-display" id="body-size">14px</span>
+    </label>
+    <input type="range" min="10" max="24" value="14" id="body-slider">
+  </div>
+</div>
 
-      // H1 slider
-      const h1Slider = document.getElementById("h1-slider");
-      const h1Display = document.getElementById("h1-size");
-      const h1Area = document.querySelector(".h1-area");
+<div class="h1-area" 
+     contenteditable="true" 
+     data-placeholder="type h1 here"
+     spellcheck="false"
+     autocorrect="off"
+     autocapitalize="off">
+Hello, girls.
+</div>
 
-      h1Slider.addEventListener("input", function () {
-        const size = this.value;
-        h1Area.style.fontSize = size + "px";
-        h1Display.textContent = size + "px";
-      });
+<div class="body-area" 
+     contenteditable="true" 
+     data-placeholder="type body text here"
+     spellcheck="false"
+     autocorrect="off"
+     autocapitalize="off">
+The quick brown fox jumps over the lazy dog
+abcdefghijklmnopqrstuvwxyz
 
-      // Body slider
-      const bodySlider = document.getElementById("body-slider");
-      const bodyDisplay = document.getElementById("body-size");
-      const bodyArea = document.querySelector(".body-area");
+pack my box with five dozen liquor jugs
+sphinx of black quartz judge my vow
+</div>
 
-      bodySlider.addEventListener("input", function () {
-        const size = this.value;
-        bodyArea.style.fontSize = size + "px";
-        bodyDisplay.textContent = size + "px";
-      });
-    </script>
-  </body>
+<button class="paste-button" onclick="pasteFromClipboard()">paste</button>
+
+<script>
+// Strip formatting on paste
+document.querySelectorAll('[contenteditable]').forEach(element => {
+  element.addEventListener('paste', function(e) {
+    e.preventDefault();
+    const text = e.clipboardData.getData('text/plain');
+    document.execCommand('insertText', false, text);
+  });
+});
+
+// H1 slider
+const h1Slider = document.getElementById('h1-slider');
+const h1Display = document.getElementById('h1-size');
+const h1Area = document.querySelector('.h1-area');
+
+h1Slider.addEventListener('input', function() {
+  const size = this.value;
+  h1Area.style.fontSize = size + 'px';
+  h1Display.textContent = size + 'px';
+});
+
+// Body slider
+const bodySlider = document.getElementById('body-slider');
+const bodyDisplay = document.getElementById('body-size');
+const bodyArea = document.querySelector('.body-area');
+
+bodySlider.addEventListener('input', function() {
+  const size = this.value;
+  bodyArea.style.fontSize = size + 'px';
+  bodyDisplay.textContent = size + 'px';
+});
+
+// Paste from clipboard
+function pasteFromClipboard() {
+  const bodyArea = document.querySelector('.body-area');
+  bodyArea.textContent = '';
+  bodyArea.focus();
+  
+  // Trigger paste command directly
+  document.execCommand('paste');
+}
+</script>
+
+</body>
 </html>
