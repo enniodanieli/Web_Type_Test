@@ -25,9 +25,13 @@ body {
   -webkit-text-size-adjust: 100%;
 }
 
-/* Stylistic set activated */
-body.alt-style {
+/* Stylistic sets */
+body.ss01 {
   font-feature-settings: "ss01";
+}
+
+body.ss02 {
+  font-feature-settings: "ss02";
 }
 
 /* Size controls */
@@ -105,12 +109,14 @@ input[type="range"]::-moz-range-track {
   min-width: 40px;
 }
 
-/* Style toggle button */
-.style-toggle {
+/* Style switcher buttons */
+.style-switcher {
+  display: flex;
+  gap: 10px;
   margin-bottom: 15px;
 }
 
-.style-toggle button {
+.style-switcher button {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   font-size: 12px;
   padding: 8px 16px;
@@ -119,7 +125,7 @@ input[type="range"]::-moz-range-track {
   cursor: pointer;
 }
 
-.style-toggle button.active {
+.style-switcher button.active {
   background: #333;
   color: white;
 }
@@ -181,15 +187,17 @@ input[type="range"]::-moz-range-track {
 <body>
 
 <div class="controls">
-  <div class="style-toggle">
-    <button onclick="toggleStyle()" id="style-btn">alt style (off)</button>
+  <div class="style-switcher">
+    <button onclick="switchStyle('default')" class="active" id="btn-default">default</button>
+    <button onclick="switchStyle('ss01')" id="btn-ss01">ss01</button>
+    <button onclick="switchStyle('ss02')" id="btn-ss02">ss02</button>
   </div>
 
   <div class="control-group">
     <label>
       h1 size: <span class="size-display" id="h1-size">24px</span>
     </label>
-    <input type="range" min="10" max="56" value="24" id="h1-slider">
+    <input type="range" min="10" max="120" value="24" id="h1-slider">
   </div>
   
   <div class="control-group">
@@ -206,7 +214,7 @@ input[type="range"]::-moz-range-track {
      spellcheck="false"
      autocorrect="off"
      autocapitalize="off">
-Hola, mundo cruel.
+hello, world.
 </div>
 
 <div class="body-area" 
@@ -215,11 +223,18 @@ Hola, mundo cruel.
      spellcheck="false"
      autocorrect="off"
      autocapitalize="off">
-The quick brown fox jumps over the lazy dog
+the quick brown fox jumps over the lazy dog
 abcdefghijklmnopqrstuvwxyz
+0123456789 !@#$%^&*()
 
 pack my box with five dozen liquor jugs
 sphinx of black quartz judge my vow
+
+function calculatetotal(items) {
+  return items.reduce((sum, item) => {
+    return sum + item.price * item.quantity;
+  }, 0);
+}
 </div>
 
 <button class="paste-button" onclick="pasteFromClipboard()">paste</button>
@@ -234,18 +249,21 @@ document.querySelectorAll('[contenteditable]').forEach(element => {
   });
 });
 
-// Toggle stylistic set
-function toggleStyle() {
-  document.body.classList.toggle('alt-style');
+// Style switcher
+function switchStyle(style) {
+  // Remove all style classes
+  document.body.classList.remove('ss01', 'ss02');
   
-  const btn = document.getElementById('style-btn');
-  if (document.body.classList.contains('alt-style')) {
-    btn.textContent = 'alt style (on)';
-    btn.classList.add('active');
-  } else {
-    btn.textContent = 'alt style (off)';
-    btn.classList.remove('active');
+  // Add selected style class (if not default)
+  if (style !== 'default') {
+    document.body.classList.add(style);
   }
+  
+  // Update button states
+  document.getElementById('btn-default').classList.remove('active');
+  document.getElementById('btn-ss01').classList.remove('active');
+  document.getElementById('btn-ss02').classList.remove('active');
+  document.getElementById('btn-' + style).classList.add('active');
 }
 
 // H1 slider
