@@ -697,3 +697,37 @@ OOOO?OOOO
 HO?HO OH?OH
 OH?HO HO?OH
 HHH?OOO OOO?HHH
+
+
+[[Terminal/Code Test Strings]]
+
+npm install @types/node --save-dev
+curl -X POST https://api.example.com/v2/users?id=42&debug=true
+const total = (price * 0.15) + shipping; // Calculate 15% tax
+git commit -m "Fix bug in parser.js (#347)"
+echo "Progress: 87% complete" && sleep 5
+user@localhost:~/projects$ ./build.sh --verbose
+if (count % 2 === 0) { return "even"; }
+SELECT * FROM users WHERE id IN (1,2,3) AND status='active';
+Price: $49.99 | Discount: 25% | Total: $37.49
+{'name': 'John', 'email': 'john@example.com', 'age': 34}
+
+
+[[Pangram + Numbers + Punctuation]]
+
+The quick brown fox jumps over 13 lazy dogs! #2025
+"How vexingly quick daft zebras jump!" — 678 (90%)
+Pack my box with five dozen liquor jugs: $1,234.56
+@username said: "Meet me @ 3:45pm & bring 50% more."
+
+
+[[Realistic Code Block]]
+
+function calculateTotal(items) {
+  let sum = 0;
+  for (let i = 0; i < items.length; i++) {
+    sum += items[i].price * (1 - items[i].discount / 100);
+  }
+  return `Total: $${sum.toFixed(2)}`;
+}
+
