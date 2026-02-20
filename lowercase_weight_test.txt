@@ -716,7 +716,7 @@ Price: $49.99 | Discount: 25% | Total: $37.49
 [[Pangram + Numbers + Punctuation]]
 
 The quick brown fox jumps over 13 lazy dogs! #2025
-"How vexingly quick daft zebras jump!" — 678 (90%)
+"How vexingly quick daft zebras jump!" -- 678 (90%)
 Pack my box with five dozen liquor jugs: $1,234.56
 @username said: "Meet me @ 3:45pm & bring 50% more."
 
@@ -731,3 +731,14 @@ function calculateTotal(items) {
   return `Total: $${sum.toFixed(2)}`;
 }
 
+
+git reset HEAD^
+npm install package@^2.0.0
+const result = 2^10;
+grep "^Error" logfile.txt
+sed 's/^/    /' file.txt
+echo $((5^3))
+version: ^1.2.3
+/^[A-Z]/
+SELECT * FROM users WHERE name LIKE '^John';
+<button>Press Ctrl+Shift+^</button>
