@@ -51,6 +51,7 @@ body {
 .output {
   color: #cc6600;
   margin-left: 0;
+  white-space: pre-wrap;
 }
 
 .input-line {
@@ -70,9 +71,8 @@ body {
   caret-color: #ff8800;
 }
 
-/* Mobile: prevent zoom, autocorrect, etc */
 .input-field {
-  font-size: 16px; /* Prevents iOS zoom */
+  font-size: 16px;
   -webkit-appearance: none;
   appearance: none;
 }
@@ -83,71 +83,272 @@ body {
   }
 }
 
-.cursor {
-  display: inline-block;
-  width: 0.6em;
-  height: 1.2em;
-  background: #ff8800;
-  animation: blink 1s step-end infinite;
-  vertical-align: text-bottom;
-  margin-left: 2px;
+/* View panels */
+.view {
+  display: none;
+  height: 100vh;
+  padding: 24px;
+  overflow-y: auto;
 }
 
-@keyframes blink {
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0; }
+.view.active {
+  display: block;
+}
+
+.placeholder {
+  color: #666;
+  text-align: center;
+  padding-top: 100px;
 }
 </style>
 </head>
 <body>
 
-<div class="terminal-container">
-  <div class="terminal-content" id="terminal-content">
-    <div class="terminal-line">
-      <span class="prompt">user@sol:~$</span> <span class="command">ls fonts/</span>
-    </div>
-    <div class="terminal-line output">sol-regular.woff2    sol-bold.woff2    README.txt</div>
-    
-    <div class="terminal-line"></div>
-    
-    <div class="terminal-line">
-      <span class="prompt">user@sol:~$</span> <span class="command">cat README.txt</span>
-    </div>
-    <div class="terminal-line output">A monospace font for people who stare at terminals all day.</div>
-    
-    <div class="terminal-line"></div>
-    
-    <div class="terminal-line">
-      <span class="prompt">user@sol:~$</span> <span class="command">whoami</span>
-    </div>
-    <div class="terminal-line output">just another font trying to make it</div>
-    
-    <div class="terminal-line"></div>
-    
-    <div class="terminal-line input-line">
-      <span class="prompt">user@sol:~$</span>
-      <input 
-        type="text" 
-        class="input-field" 
-        id="command-input"
-        spellcheck="false"
-        autocorrect="off"
-        autocapitalize="off"
-        autocomplete="off"
-      >
+<!-- Terminal View -->
+<div class="view active" id="terminal-view">
+  <div class="terminal-container">
+    <div class="terminal-content" id="terminal-content">
+      <div class="terminal-line output">Last login: <span id="login-time"></span></div>
+      <div class="terminal-line output">Sol Mono v1.0 — type 'help' for available commands</div>
+      <div class="terminal-line"></div>
+      
+      <form class="terminal-line input-line" onsubmit="return false;" autocomplete="off">
+        <span class="prompt">user@sol:~$</span>
+        <input 
+          type="text" 
+          class="input-field" 
+          id="command-input"
+          spellcheck="false"
+          autocorrect="off"
+          autocapitalize="off"
+          autocomplete="off"
+        >
+      </form>
     </div>
   </div>
 </div>
 
+<!-- Code View -->
+<div class="view" id="code-view">
+  <div class="placeholder">BS Code view coming soon... (type 'terminal' to go back)</div>
+</div>
+
+<!-- Specimen View -->
+<div class="view" id="specimen-view">
+  <div class="placeholder">Specimen view coming soon... (type 'terminal' to go back)</div>
+</div>
+
 <script>
-// Auto-focus input on load
-window.addEventListener('load', () => {
-  document.getElementById('command-input').focus();
+// Set login time
+const now = new Date();
+const timeStr = now.toLocaleString('en-US', { 
+  weekday: 'short', 
+  month: 'short', 
+  day: 'numeric', 
+  hour: '2-digit', 
+  minute: '2-digit', 
+  second: '2-digit' 
+});
+document.getElementById('login-time').textContent = timeStr;
+
+const input = document.getElementById('command-input');
+const terminalContent = document.getElementById('terminal-content');
+const terminalView = document.getElementById('terminal-view');
+const codeView = document.getElementById('code-view');
+const specimenView = document.getElementById('specimen-view');
+
+// Command responses
+const commands = {
+  'help': `Available commands:
+  help          show this message
+  whoami        who are you talking to?
+  ls            list files
+  cat FILE      read a file
+  git log       view commit history
+  ping HOST     test connection
+  code          open code editor
+  specimen      view character set
+  terminal      return to terminal
+  clear         clear screen`,
+  
+  'whoami': 'just another font trying to make it',
+  
+  'ls': 'sol-regular.woff2    sol-bold.woff2    README.txt',
+  
+  'cat README.txt': 'A monospace font for people who stare at terminals all day.',
+  'cat readme.txt': 'A monospace font for people who stare at terminals all day.',
+  
+  'git log': `commit a3f8e92 (HEAD -> main)
+Author: Ennio <ennio@sol.font>
+Date:   ${timeStr}
+
+    finally fixed the ampersand (maybe)
+
+commit b2c4d81
+Author: Ennio <ennio@sol.font>
+Date:   Yesterday
+
+    added more punctuation, still no idea what i'm doing
+
+commit 9f1a3e7
+Author: Ennio <ennio@sol.font>
+Date:   Last week
+
+    initial commit: hello world`,
+  
+  'ping perfection': `PING perfection (127.0.0.1): 56 data bytes
+Request timeout for icmp_seq 0
+Request timeout for icmp_seq 1
+Request timeout for icmp_seq 2
+
+--- perfection ping statistics ---
+3 packets transmitted, 0 packets received, 100.0% packet loss`,
+
+  './sol --help': `sol: a monospace font
+Usage: sol [OPTIONS]
+
+Options:
+  --help           you're looking at it
+  --perfect        error: flag not found
+  --good-enough    now we're talking`,
+
+  'clear': 'CLEAR_SCREEN'
+};
+
+// Handle commands
+input.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    const command = input.value.trim();
+    
+    if (command) {
+      // Add command to history
+      addToHistory(command);
+      
+      // Process command
+      processCommand(command);
+      
+      // Clear input
+      input.value = '';
+    }
+    
+    e.preventDefault();
+  }
 });
 
-// Keep focus on input when clicking anywhere
+function addToHistory(command) {
+  const inputLine = document.querySelector('.input-line');
+  
+  // Create history entry
+  const historyLine = document.createElement('div');
+  historyLine.className = 'terminal-line';
+  historyLine.innerHTML = `<span class="prompt">user@sol:~$</span> <span class="command">${escapeHtml(command)}</span>`;
+  
+  // Insert before input line
+  terminalContent.insertBefore(historyLine, inputLine);
+}
+
+function processCommand(command) {
+  const inputLine = document.querySelector('.input-line');
+  const lowerCommand = command.toLowerCase();
+  
+  // Check for view switching commands
+  if (lowerCommand === 'code' || lowerCommand === 'editor') {
+    switchView('code');
+    return;
+  }
+  
+  if (lowerCommand === 'specimen' || lowerCommand === 'glyphs') {
+    switchView('specimen');
+    return;
+  }
+  
+  if (lowerCommand === 'terminal' || lowerCommand === 'exit') {
+    switchView('terminal');
+    return;
+  }
+  
+  if (lowerCommand === 'clear') {
+    clearTerminal();
+    return;
+  }
+  
+  // Check for command responses
+  let response = commands[command] || commands[lowerCommand];
+  
+  // Handle cat with any filename
+  if (lowerCommand.startsWith('cat ')) {
+    const filename = lowerCommand.substring(4).trim();
+    if (filename !== 'readme.txt' && filename !== 'README.txt') {
+      response = `cat: ${filename}: No such file or directory`;
+    }
+  }
+  
+  // Handle ping with any host
+  if (lowerCommand.startsWith('ping ') && !commands[lowerCommand]) {
+    const host = lowerCommand.substring(5).trim();
+    response = `ping: cannot resolve ${host}: Unknown host`;
+  }
+  
+  // Default response
+  if (!response) {
+    response = `command not found: ${command}\nType 'help' for available commands`;
+  }
+  
+  // Add response
+  const responseLine = document.createElement('div');
+  responseLine.className = 'terminal-line output';
+  responseLine.textContent = response;
+  terminalContent.insertBefore(responseLine, inputLine);
+  
+  // Add empty line
+  const emptyLine = document.createElement('div');
+  emptyLine.className = 'terminal-line';
+  terminalContent.insertBefore(emptyLine, inputLine);
+  
+  // Scroll to bottom
+  setTimeout(() => {
+    const container = document.querySelector('.terminal-container');
+    container.scrollTop = container.scrollHeight;
+  }, 10);
+}
+
+function switchView(viewName) {
+  // Hide all views
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  
+  // Show requested view
+  if (viewName === 'terminal') {
+    terminalView.classList.add('active');
+    setTimeout(() => input.focus(), 100);
+  } else if (viewName === 'code') {
+    codeView.classList.add('active');
+  } else if (viewName === 'specimen') {
+    specimenView.classList.add('active');
+  }
+}
+
+function clearTerminal() {
+  // Remove all lines except the input line
+  const inputLine = document.querySelector('.input-line');
+  terminalContent.innerHTML = '';
+  terminalContent.appendChild(inputLine);
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Auto-focus
+window.addEventListener('load', () => {
+  input.focus();
+});
+
 document.addEventListener('click', () => {
-  document.getElementById('command-input').focus();
+  if (terminalView.classList.contains('active')) {
+    input.focus();
+  }
 });
 </script>
 
