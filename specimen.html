@@ -33,7 +33,7 @@ body {
 
 .terminal-content {
   max-width: 480px;
-  padding-bottom: 300px;
+  padding-bottom: 20px;
 }
 
 .terminal-line {
@@ -87,20 +87,20 @@ body {
 <div class="terminal-container">
   <div class="terminal-content" id="terminal-content">
     <div class="terminal-line output">Last login: <span id="login-time"></span></div>
-    <div class="terminal-line output">Sol Mono v0.CU — type 'help' for available commands</div>
+    <div class="terminal-line output">Sol Mono v0.MORRINACALCADA — type 'help' for available commands</div>
     <div class="terminal-line"></div>
-<form class="input-line" onsubmit="return false;" autocomplete="off">
-    <span class="prompt">user@sol:~$</span>
-    <input 
-      type="text" 
-      class="input-field" 
-      id="command-input"
-      spellcheck="false"
-      autocorrect="off"
-      autocapitalize="off"
-      autocomplete="off"
-    >
-  </form>
+    <form class="input-line" onsubmit="return false;" autocomplete="off">
+      <span class="prompt">user@sol:~$</span>
+      <input 
+        type="text" 
+        class="input-field" 
+        id="command-input"
+        spellcheck="false"
+        autocorrect="off"
+        autocapitalize="off"
+        autocomplete="off"
+      >
+    </form>
   </div>
 </div>
 
@@ -179,15 +179,16 @@ Options:
   'clear': 'CLEAR_SCREEN'
 };
 
-// Manage padding based on keyboard visibility
-input.addEventListener('focus', () => {
-  terminalContent.style.paddingBottom = '300px';
-  // Don't scroll automatically on focus - let it stay where it is
-});
-
-input.addEventListener('blur', () => {
-  terminalContent.style.paddingBottom = '20px';
-});
+// Adjust padding based on content length
+function adjustPadding() {
+  const needsScroll = terminalContent.scrollHeight > terminalContainer.clientHeight;
+  
+  if (needsScroll) {
+    terminalContent.style.paddingBottom = '300px';
+  } else {
+    terminalContent.style.paddingBottom = '20px';
+  }
+}
 
 // Handle commands
 input.addEventListener('keydown', (e) => {
@@ -220,6 +221,7 @@ function processCommand(command) {
   
   if (lowerCommand === 'clear') {
     clearTerminal();
+    adjustPadding();
     return;
   }
   
@@ -250,13 +252,17 @@ function processCommand(command) {
   emptyLine.className = 'terminal-line';
   terminalContent.insertBefore(emptyLine, inputLine);
   
+  adjustPadding();
+  
   setTimeout(() => {
     terminalContainer.scrollTop = terminalContainer.scrollHeight;
   }, 10);
 }
 
 function clearTerminal() {
+  const inputLine = document.querySelector('.input-line');
   terminalContent.innerHTML = '';
+  terminalContent.appendChild(inputLine);
 }
 
 function escapeHtml(text) {
