@@ -3,8 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
 <style>
 @font-face {
   font-family: 'Sol';
@@ -28,17 +26,15 @@ body {
 }
 
 .terminal-container {
-  height: 100dvh;
+  height: calc(100dvh - 40px);
   overflow-y: auto;
   padding: 8px;
-  display: flex;
-  flex-direction: column;
+  padding-bottom: 0;
 }
 
 .terminal-content {
   max-width: 480px;
-  flex: 0 0 auto;
-  margin-bottom: auto;
+  padding-bottom: 8px;
 }
 
 .terminal-line {
@@ -63,8 +59,16 @@ body {
 }
 
 .input-line {
+  position: fixed;
+  bottom: 8px;
+  left: 8px;
+  right: 8px;
+  max-width: 480px;
   display: flex;
   align-items: baseline;
+  background: #000;
+  padding: 4px 0;
+  z-index: 1000;
 }
 
 .input-field {
@@ -84,8 +88,6 @@ body {
   -webkit-appearance: none;
   appearance: none;
   vertical-align: baseline;
-  position: relative;
-  bottom: 0;
 }
 </style>
 </head>
@@ -94,23 +96,23 @@ body {
 <div class="terminal-container">
   <div class="terminal-content" id="terminal-content">
     <div class="terminal-line output">Last login: <span id="login-time"></span></div>
-    <div class="terminal-line output">Sol Mono v0.1234 — type 'help' for available commands</div>
+    <div class="terminal-line output">Sol Mono v0.99 — type 'help' for available commands</div>
     <div class="terminal-line"></div>
-    
-    <form class="terminal-line input-line" onsubmit="return false;" autocomplete="off">
-      <span class="prompt">user@sol:~$</span>
-      <input 
-        type="text" 
-        class="input-field" 
-        id="command-input"
-        spellcheck="false"
-        autocorrect="off"
-        autocapitalize="off"
-        autocomplete="off"
-      >
-    </form>
   </div>
 </div>
+
+<form class="input-line" onsubmit="return false;" autocomplete="off">
+  <span class="prompt">user@sol:~$</span>
+  <input 
+    type="text" 
+    class="input-field" 
+    id="command-input"
+    spellcheck="false"
+    autocorrect="off"
+    autocapitalize="off"
+    autocomplete="off"
+  >
+</form>
 
 <script>
 // Set login time
@@ -187,25 +189,6 @@ Options:
   'clear': 'CLEAR_SCREEN'
 };
 
-// Handle visual viewport changes (keyboard appearing/disappearing)
-if (window.visualViewport) {
-  window.visualViewport.addEventListener('resize', () => {
-    scrollToBottom();
-  });
-}
-
-function scrollToBottom() {
-  setTimeout(() => {
-    terminalContainer.scrollTop = terminalContainer.scrollHeight;
-    
-    // Force input into view
-    const inputLine = document.querySelector('.input-line');
-    if (inputLine) {
-      inputLine.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
-    }
-  }, 100);
-}
-
 // Handle commands
 input.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') {
@@ -222,17 +205,14 @@ input.addEventListener('keydown', (e) => {
 });
 
 function addToHistory(command) {
-  const inputLine = document.querySelector('.input-line');
-  
   const historyLine = document.createElement('div');
   historyLine.className = 'terminal-line';
   historyLine.innerHTML = `<span class="prompt">user@sol:~$</span><span class="command" style="margin-left: 4px">${escapeHtml(command)}</span>`;
   
-  terminalContent.insertBefore(historyLine, inputLine);
+  terminalContent.appendChild(historyLine);
 }
 
 function processCommand(command) {
-  const inputLine = document.querySelector('.input-line');
   const lowerCommand = command.toLowerCase();
   
   if (lowerCommand === 'clear') {
@@ -261,19 +241,20 @@ function processCommand(command) {
   const responseLine = document.createElement('div');
   responseLine.className = 'terminal-line output';
   responseLine.textContent = response;
-  terminalContent.insertBefore(responseLine, inputLine);
+  terminalContent.appendChild(responseLine);
   
   const emptyLine = document.createElement('div');
   emptyLine.className = 'terminal-line';
-  terminalContent.insertBefore(emptyLine, inputLine);
+  terminalContent.appendChild(emptyLine);
   
-  scrollToBottom();
+  // Scroll to bottom
+  setTimeout(() => {
+    terminalContainer.scrollTop = terminalContainer.scrollHeight;
+  }, 10);
 }
 
 function clearTerminal() {
-  const inputLine = document.querySelector('.input-line');
   terminalContent.innerHTML = '';
-  terminalContent.appendChild(inputLine);
 }
 
 function escapeHtml(text) {
@@ -289,11 +270,6 @@ window.addEventListener('load', () => {
 
 document.addEventListener('click', () => {
   input.focus();
-});
-
-// Scroll when keyboard appears on mobile
-input.addEventListener('focus', () => {
-  scrollToBottom();
 });
 </script>
 
