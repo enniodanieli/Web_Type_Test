@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Sol Mono — Terminal Demo (v1)</title>
+
+  <style>
+    @font-face{
+      font-family:"SolMono";
+      src:url("./Sol-Regular.woff2") format("woff2");
+      font-weight:400;
+      font-style:normal;
+      font-display:swap;
+    }
+
+    :root{
+      --bg:#0b0f14;
+      --panel: rgba(8,12,18,.88);
+      --border: rgba(255,255,255,.08);
+
+      --fg:#d7e0ea;
+      --muted:#8aa0b3;
+      --accent:#7ee787;
+      --warn:#f9c74f;
+      --err:#ff6b6b;
+
+      --fs-mobile:14px;
+      --fs-desktop:13px;
+      --lh:1.45;
+      --ls:0px;
+
+      --pad: 18px;
+      --radius: 14px;
+
+      --kb: 0px;
+      --safe-b: env(safe-area-inset-bottom, 0px);
+    }
+
+    html, body { height:100%; margin:0; }
+    body{
+      background:
+        radial-gradient(1200px 800px at 30% 20%, rgba(126,231,135,.08), transparent 60%),
+        radial-gradient(900px 600px at 70% 80%, rgba(88,166,255,.08), transparent 60%),
+        var(--bg);
+      color: var(--fg);
+      font-family:"SolMono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      letter-spacing: var(--ls);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow:hidden;
+    }
+
+    body { font-size: var(--fs-mobile); line-height: var(--lh); }
+    @media (min-width: 820px){
+      body { font-size: var(--fs-desktop); }
+    }
+
+    /* Outer frame (desktop). Mobile will go full-bleed via media query below. */
+    .frame{
+      height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 18px;
+      box-sizing:border-box;
+    }
+
+    .terminal{
+      width:min(1100px, 100%);
+      height:min(760px, 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 20px 60px rgba(0,0,0,.55);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      position: relative;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+      user-select:none;
+      flex: 0 0 auto;
+    }
+    .dots{ display:flex; gap:7px; }
+    .dot{ width:10px; height:10px; border-radius:999px; background: rgba(255,255,255,.14); }
+    .title{ font-size: 12px; opacity:.9; }
+
+    .screen{
+      flex:1 1 auto;
+      overflow:auto;
+      padding: var(--pad);
+      padding-bottom: calc(var(--pad) + var(--kb) + var(--safe-b));
+      box-sizing:border-box;
+      white-space: pre-wrap;
+      word-break: break-word;
+      tab-size: 2;
+      -webkit-overflow-scrolling: touch;
+      caret-color: transparent;
+    }
+
+    /* Text styling */
+    .dim{ color: var(--muted); }
+    .accent{ color: var(--accent); }
+    .warn{ color: var(--warn); }
+    .err{ color: var(--err); }
+
+    .line{ display:block; }
+    .prompt{ color: var(--muted); }
+    .prompt .user{ color: var(--accent); }
+    .prompt .path{ color: var(--muted); opacity:.95; }
+
+    .cursor{
+      display:inline-block;
+      width: 0.62em;
+      height: 1.05em;
+      transform: translateY(0.12em);
+      background: var(--fg);
+      margin-left: 0.06em;
+      animation: blink 1s steps(1) infinite;
+    }
+    @keyframes blink{ 50%{ opacity:0; } }
+
+    .boot{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      display:flex;
+      align-items:flex-start;
+      justify-content:flex-start;
+      padding: calc(var(--pad) + 38px) var(--pad);
+      color: var(--accent);
+      opacity: 0;
+      transition: opacity .25s ease;
+      mix-blend-mode: screen;
+      text-shadow: 0 0 18px rgba(126,231,135,.18);
+    }
+    .boot.on{ opacity: 1; }
+    .boot pre{
+      margin:0;
+      white-space: pre-wrap;
+      line-height: 1.25;
+      opacity: .9;
+    }
+
+    /* Hidden keyboard input:
+       Keep it on-screen (tiny) so Safari reliably allows focus. */
+    textarea#kb{
+      position: fixed;
+      left: 0;
+      bottom: 0;
+      width: 1px;
+      height: 1px;
+      opacity: 0.001;
+      pointer-events: none;
+      font-size: 16px; /* prevents iOS zoom */
+      border: 0;
+      padding: 0;
+      margin: 0;
+      background: transparent;
+      color: transparent;
+    }
+
+    .hint{
+      display:inline-block;
+      margin-top: 6px;
+      color: var(--muted);
+      opacity: .65;
+      font-size: .95em;
+    }
+
+    ::selection{ background: rgba(126,231,135,.25); }
+
+    /* ✅ Mobile: full-bleed terminal (no “window wrapper”) */
+    @media (max-width: 600px){
+      .frame{ padding: 0; }
+      .terminal{
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+        border-left: 0;
+        border-right: 0;
+        box-shadow: none;
+      }
+      :root{
+        --pad: 12px; /* ~8–12pt feel */
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <textarea
+    id="kb"
+    autocomplete="off"
+    autocapitalize="off"
+    autocorrect="off"
+    spellcheck="false"
+    inputmode="text"
+    aria-hidden="true"
+  ></textarea>
+
+  <div class="frame">
+    <div class="terminal" id="terminal" role="application" aria-label="Terminal demo">
+      <div class="topbar">
+        <div class="dots" aria-hidden="true">
+          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+        <div class="title">Sol Mono — Terminal Demo</div>
+      </div>
+
+      <div class="screen" id="screen" aria-live="polite"></div>
+      <div class="boot" id="boot" aria-hidden="true"><pre id="bootText"></pre></div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const terminal = document.getElementById("terminal");
+      const screen = document.getElementById("screen");
+      const kb = document.getElementById("kb");
+      const boot = document.getElementById("boot");
+      const bootText = document.getElementById("bootText");
+
+      const host = "sol";
+      const user = "ennio";
+      const cwd  = "~";
+      const version = "Sol Mono v0.1";
+
+      const files = [
+        { name: "README.md", size: "3.1K", modified: "Feb 23 17:14" },
+        { name: "specimen.txt", size: "2.4K", modified: "Feb 22 21:08" },
+        { name: "notes.txt", size: "1.2K", modified: "Feb 20 09:19" },
+        { name: "index.html", size: "9.8K", modified: "Feb 23 17:21" },
+      ];
+
+      const gitCommits = [
+        { hash:"9f3a2c1", date:"2026-02-23", msg:"prototype: inline terminal input on mobile" },
+        { hash:"71c4b0e", date:"2026-02-22", msg:"layout: basic terminal frame + theme" },
+        { hash:"4a8d11c", date:"2026-02-21", msg:"font: woff2 export + fallback stack" },
+      ];
+
+      const helpText = [
+        "Available commands:",
+        "  help          show this message",
+        "  whoami        who are you talking to?",
+        "  ls            list files",
+        "  git log       view commit history",
+        "  clear         clear screen",
+        "",
+        "Tip: tap anywhere to focus. Type a command and press Enter.",
+      ].join("\\n");
+
+      let current = "";
+      let isAtBottom = true;
+      let hasFocusedOnce = false;
+      const history = [];
+
+      function esc(s){
+        return s.replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+      }
+
+      function nowLoginLine(){
+        const d = new Date();
+        const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+        const mons = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        const day = days[d.getDay()];
+        const mon = mons[d.getMonth()];
+        const date = String(d.getDate()).padStart(2,"0");
+
+        let h = d.getHours();
+        const ampm = h >= 12 ? "PM" : "AM";
+        h = h % 12; if (h === 0) h = 12;
+        const hh = String(h).padStart(2,"0");
+        const mm = String(d.getMinutes()).padStart(2,"0");
+        const ss = String(d.getSeconds()).padStart(2,"0");
+
+        return `Last login: ${day}, ${mon} ${date} at ${hh}:${mm}:${ss} ${ampm}`;
+      }
+
+      function promptHTML(){
+        return `<span class="prompt"><span class="user">${esc(user)}@${esc(host)}</span>:<span class="path">${esc(cwd)}</span>$</span> `;
+      }
+
+      function scrollToBottom(){
+        requestAnimationFrame(() => {
+          screen.scrollTop = screen.scrollHeight;
+        });
+      }
+
+      function printLine(html, cls=""){
+        const classAttr = cls ? `line ${cls}` : `line`;
+        history.push(`<span class="${classAttr}">${html}</span>`);
+      }
+
+      function printBlock(text, cls=""){
+        const safe = esc(text);
+        const lines = safe.split("\\n").map(l => `<span class="line${cls ? " "+cls : ""}">${l}</span>`);
+        history.push(lines.join("\\n"));
+      }
+
+      function unknown(cmd){
+        printLine(`<span class="err">command not found:</span> ${esc(cmd)} <span class="dim">(try 'help')</span>`);
+      }
+
+      function runCommand(raw){
+        const cmd = raw.trim();
+        printLine(`${promptHTML()}${esc(raw)}`);
+
+        if (!cmd) return;
+
+        if (cmd === "help"){ printBlock(helpText, "dim"); return; }
+        if (cmd === "whoami"){ printLine(`${esc(user)}`); return; }
+
+        if (cmd === "ls"){
+          const out = files.map(f => `${f.modified}  ${f.size.padStart(4," ")}  ${f.name}`).join("\\n");
+          printBlock(out, "");
+          return;
+        }
+
+        if (cmd === "git log"){
+          const out = gitCommits.map(c => `${c.hash}  ${c.date}  ${c.msg}`).join("\\n");
+          printBlock(out, "");
+          return;
+        }
+
+        if (cmd === "clear"){
+          history.length = 0;
+          return;
+        }
+
+        unknown(cmd);
+      }
+
+      function render(){
+        const nearBottom = (screen.scrollTop + screen.clientHeight) >= (screen.scrollHeight - 12);
+        isAtBottom = nearBottom;
+
+        const lines = [];
+        lines.push(`<span class="line dim">${esc(nowLoginLine())}</span>`);
+        lines.push(`<span class="line"><span class="accent">${esc(version)}</span> — type <span class="warn">'help'</span> for available commands</span>`);
+        lines.push(`<span class="line"></span>`);
+
+        for (const item of history) lines.push(item);
+
+        lines.push(
+          `<span class="line">${promptHTML()}<span id="typed">${esc(current)}</span><span class="cursor" aria-hidden="true"></span></span>` +
+          (!hasFocusedOnce ? `<span class="line hint">Tap anywhere to type</span>` : ``)
+        );
+
+        screen.innerHTML = lines.join("\\n");
+        if (isAtBottom) scrollToBottom();
+      }
+
+      function safeFocus(){
+        hasFocusedOnce = true;
+        try {
+          kb.focus(); // Safari-safe
+        } catch (e) {
+          // As a fallback, briefly enable pointer events and focus again
+          kb.style.pointerEvents = "auto";
+          kb.focus();
+          kb.style.pointerEvents = "none";
+        }
+        scrollToBottom();
+        render();
+      }
+
+      // Focus on tap/click anywhere in terminal
+      terminal.addEventListener("mousedown", () => safeFocus(), { passive: true });
+      terminal.addEventListener("touchstart", () => safeFocus(), { passive: true });
+      terminal.addEventListener("pointerdown", () => safeFocus(), { passive: true });
+
+      // Update bottom pin awareness
+      screen.addEventListener("scroll", () => {
+        const nearBottom = (screen.scrollTop + screen.clientHeight) >= (screen.scrollHeight - 12);
+        isAtBottom = nearBottom;
+      }, { passive: true });
+
+      // Mirror typing
+      kb.addEventListener("input", () => {
+        current = kb.value;
+        render();
+      });
+
+      kb.addEventListener("keydown", (e) => {
+        if (e.key === "Enter"){
+          e.preventDefault();
+          const toRun = current;
+          current = "";
+          kb.value = "";
+          runCommand(toRun);
+          render();
+          scrollToBottom();
+        }
+      });
+
+      function updateKeyboardInset(){
+        const vv = window.visualViewport;
+        let kbPx = 0;
+
+        if (vv){
+          const diff = window.innerHeight - vv.height - vv.offsetTop;
+          kbPx = Math.max(0, Math.round(diff));
+        }
+        document.documentElement.style.setProperty("--kb", kbPx + "px");
+        if (document.activeElement === kb && isAtBottom) scrollToBottom();
+      }
+
+      if (window.visualViewport){
+        window.visualViewport.addEventListener("resize", updateKeyboardInset);
+        window.visualViewport.addEventListener("scroll", updateKeyboardInset);
+      }
+      window.addEventListener("resize", updateKeyboardInset);
+
+      function bootBurst(){
+        const chars = "01#@$%&*+/:;=-_[]{}()<>|\\\\";
+        const lines = 7;
+        const cols = 42;
+
+        function randLine(){
+          let s = "";
+          for (let i=0;i<cols;i++) s += chars[Math.floor(Math.random()*chars.length)];
+          return s;
+        }
+
+        function paint(){
+          bootText.textContent =
+            "initializing display buffer…\\n" +
+            "loading font tables…\\n\\n" +
+            Array.from({length: lines}, randLine).join("\\n");
+        }
+
+        paint();
+        boot.classList.add("on");
+
+        let ticks = 0;
+        const t = setInterval(() => {
+          ticks++;
+          paint();
+          if (ticks >= 4){
+            clearInterval(t);
+            setTimeout(() => boot.classList.remove("on"), 250);
+          }
+        }, 160);
+      }
+
+      // Init
+      updateKeyboardInset();
+      render();
+      scrollToBottom();
+      bootBurst();
+
+      // Desktop auto-focus only (still lets you click elsewhere)
+      const isTouch = matchMedia("(pointer: coarse)").matches;
+      if (!isTouch){
+        setTimeout(() => safeFocus(), 200);
+      }
+    })();
+  </script>
+</body>
+</html>
