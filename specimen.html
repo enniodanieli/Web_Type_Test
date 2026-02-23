@@ -87,7 +87,7 @@ body {
 <div class="terminal-container">
   <div class="terminal-content" id="terminal-content">
     <div class="terminal-line output">Last login: <span id="login-time"></span></div>
-    <div class="terminal-line output">Sol Mono v0.BUCETONA — type 'help' for available commands</div>
+    <div class="terminal-line output">Sol Mono v0.PINTO — type 'help' for available commands</div>
     <div class="terminal-line"></div>
 <form class="input-line" onsubmit="return false;" autocomplete="off">
     <span class="prompt">user@sol:~$</span>
@@ -256,14 +256,26 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
-// Auto-focus
+// Auto-focus and handle scroll on keyboard events
 window.addEventListener('load', () => {
   input.focus();
+  scrollToInput();
 });
 
 document.addEventListener('click', () => {
   input.focus();
+  scrollToInput();
 });
+
+input.addEventListener('focus', () => {
+  scrollToInput();
+});
+
+function scrollToInput() {
+  setTimeout(() => {
+    terminalContainer.scrollTop = terminalContainer.scrollHeight;
+  }, 300);
+}
 </script>
 
 </body>
