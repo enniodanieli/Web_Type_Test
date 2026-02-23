@@ -87,7 +87,7 @@ body {
 <div class="terminal-container">
   <div class="terminal-content" id="terminal-content">
     <div class="terminal-line output">Last login: <span id="login-time"></span></div>
-    <div class="terminal-line output">Sol Mono v0.88888 — type 'help' for available commands</div>
+    <div class="terminal-line output">Sol Mono v0.BUNDA — type 'help' for available commands</div>
     <div class="terminal-line"></div>
 <form class="input-line" onsubmit="return false;" autocomplete="off">
     <span class="prompt">user@sol:~$</span>
@@ -195,11 +195,13 @@ input.addEventListener('keydown', (e) => {
 });
 
 function addToHistory(command) {
+  const inputLine = document.querySelector('.input-line');
+  
   const historyLine = document.createElement('div');
   historyLine.className = 'terminal-line';
   historyLine.innerHTML = `<span class="prompt">user@sol:~$</span><span class="command" style="margin-left: 4px">${escapeHtml(command)}</span>`;
   
-  terminalContent.appendChild(historyLine);
+  terminalContent.insertBefore(historyLine, inputLine);
 }
 
 function processCommand(command) {
