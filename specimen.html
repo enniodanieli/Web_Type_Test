@@ -90,7 +90,7 @@ body {
 <div class="terminal-container">
   <div class="terminal-content" id="terminal-content">
     <div class="terminal-line output">Last login: <span id="login-time"></span></div>
-    <div class="terminal-line output">Sol Mono v0.2 — type 'help' for available commands</div>
+    <div class="terminal-line output">Sol Mono v0.5 — type 'help' for available commands</div>
     <div class="terminal-line"></div>
     
     <form class="terminal-line input-line" onsubmit="return false;" autocomplete="off">
@@ -123,6 +123,7 @@ document.getElementById('login-time').textContent = timeStr;
 
 const input = document.getElementById('command-input');
 const terminalContent = document.getElementById('terminal-content');
+const terminalContainer = document.querySelector('.terminal-container');
 
 // Command responses
 const commands = {
@@ -181,6 +182,25 @@ Options:
 
   'clear': 'CLEAR_SCREEN'
 };
+
+// Handle visual viewport changes (keyboard appearing/disappearing)
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', () => {
+    scrollToBottom();
+  });
+}
+
+function scrollToBottom() {
+  setTimeout(() => {
+    terminalContainer.scrollTop = terminalContainer.scrollHeight;
+    
+    // Force input into view
+    const inputLine = document.querySelector('.input-line');
+    if (inputLine) {
+      inputLine.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
+    }
+  }, 100);
+}
 
 // Handle commands
 input.addEventListener('keydown', (e) => {
@@ -243,13 +263,7 @@ function processCommand(command) {
   emptyLine.className = 'terminal-line';
   terminalContent.insertBefore(emptyLine, inputLine);
   
-  setTimeout(() => {
-  const container = document.querySelector('.terminal-container');
-  container.scrollTop = container.scrollHeight;
-  
-  // Extra aggressive scroll for iOS
-  input.scrollIntoView({ behavior: 'smooth', block: 'end' });
-}, 10);
+  scrollToBottom();
 }
 
 function clearTerminal() {
@@ -275,9 +289,7 @@ document.addEventListener('click', () => {
 
 // Scroll when keyboard appears on mobile
 input.addEventListener('focus', () => {
-  setTimeout(() => {
-    input.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, 300);
+  scrollToBottom();
 });
 </script>
 
