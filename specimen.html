@@ -205,6 +205,7 @@ function addToHistory(command) {
 }
 
 function processCommand(command) {
+  const inputLine = document.querySelector('.input-line');
   const lowerCommand = command.toLowerCase();
   
   if (lowerCommand === 'clear') {
@@ -233,11 +234,11 @@ function processCommand(command) {
   const responseLine = document.createElement('div');
   responseLine.className = 'terminal-line output';
   responseLine.textContent = response;
-  terminalContent.appendChild(responseLine);
+  terminalContent.insertBefore(responseLine, inputLine);
   
   const emptyLine = document.createElement('div');
   emptyLine.className = 'terminal-line';
-  terminalContent.appendChild(emptyLine);
+  terminalContent.insertBefore(emptyLine, inputLine);
   
   // Scroll to bottom
   setTimeout(() => {
