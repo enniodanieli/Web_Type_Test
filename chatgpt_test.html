@@ -373,6 +373,13 @@
       kb.addEventListener("input", () => {
         current = kb.value;
         render();
+
+        // iOS sometimes nudges layout a pixel or two on the first keystroke after refocus.
+        // If the keyboard input is focused, re-pin to bottom to prevent micro-jumps.
+        if (document.activeElement === kb) {
+          scrollToBottom();
+          setTimeout(scrollToBottom, 0);
+        }
       });
 
       kb.addEventListener("keydown", (e) => {
