@@ -106,7 +106,6 @@
       caret-color: transparent;
       -webkit-user-select: text;
       user-select: text;
-      transition: padding-bottom 180ms ease;
     }
 
     .dim{ color: var(--muted); }
@@ -209,7 +208,7 @@
       const host = "sol";
       const user = "ennio";
       const cwd  = "~";
-      const version = "Sol Mono v0.ZHIVAGO>";
+      const version = "Sol Mono v0.ANDORRA>";
 
       const files = [
         { name: "README.md", size: "3.1K", modified: "Feb 23 17:14" },
@@ -383,13 +382,6 @@
       kb.addEventListener("input", () => {
         current = kb.value;
         render();
-
-        // iOS sometimes nudges layout a pixel or two on the first keystroke after refocus.
-        // If the keyboard input is focused, re-pin to bottom to prevent micro-jumps.
-        if (document.activeElement === kb) {
-          scrollToBottom();
-          setTimeout(scrollToBottom, 0);
-        }
       });
 
       kb.addEventListener("keydown", (e) => {
