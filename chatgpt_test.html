@@ -209,7 +209,7 @@
       const host = "sol";
       const user = "ennio";
       const cwd  = "~";
-      const version = "Sol Mono v0.MADONNA!>";
+      const version = "Sol Mono v0.ZHIVAGO>";
 
       const files = [
         { name: "README.md", size: "3.1K", modified: "Feb 23 17:14" },
@@ -320,8 +320,15 @@
       }
 
       function render(){
-        const nearBottom = (screen.scrollTop + screen.clientHeight) >= (screen.scrollHeight - 12);
-        isAtBottom = nearBottom;
+        // While typing (kb focused), keep the terminal pinned.
+        // iOS can report scroll metrics 1–2px off during keyboard/layout changes,
+        // which causes a tiny nudge on the first keystroke.
+        if (document.activeElement !== kb) {
+          const nearBottom = (screen.scrollTop + screen.clientHeight) >= (screen.scrollHeight - 12);
+          isAtBottom = nearBottom;
+        } else {
+          isAtBottom = true;
+        }
 
         const lines = [];
         lines.push(`<span class="line dim">${esc(nowLoginLine())}</span>`);
