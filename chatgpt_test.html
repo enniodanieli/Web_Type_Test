@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Sol Mono — Terminal Demo (v1)</title>
+  <title>Sol Mono — Terminal Demo (v1.1)</title>
 
   <style>
     @font-face{
@@ -56,7 +56,6 @@
       body { font-size: var(--fs-desktop); }
     }
 
-    /* Outer frame (desktop). Mobile will go full-bleed via media query below. */
     .frame{
       height:100%;
       display:flex;
@@ -105,9 +104,10 @@
       tab-size: 2;
       -webkit-overflow-scrolling: touch;
       caret-color: transparent;
+      -webkit-user-select: text;
+      user-select: text;
     }
 
-    /* Text styling */
     .dim{ color: var(--muted); }
     .accent{ color: var(--accent); }
     .warn{ color: var(--warn); }
@@ -129,44 +129,24 @@
     }
     @keyframes blink{ 50%{ opacity:0; } }
 
-    .boot{
-      position:absolute;
-      inset:0;
-      pointer-events:none;
-      display:flex;
-      align-items:flex-start;
-      justify-content:flex-start;
-      padding: calc(var(--pad) + 38px) var(--pad);
-      color: var(--accent);
-      opacity: 0;
-      transition: opacity .25s ease;
-      mix-blend-mode: screen;
-      text-shadow: 0 0 18px rgba(126,231,135,.18);
-    }
-    .boot.on{ opacity: 1; }
-    .boot pre{
-      margin:0;
-      white-space: pre-wrap;
-      line-height: 1.25;
-      opacity: .9;
-    }
-
-    /* Hidden keyboard input:
-       Keep it on-screen (tiny) so Safari reliably allows focus. */
+    /* ✅ Hidden keyboard input:
+       Keep it focusable + on-screen (1px), to satisfy Safari/iOS. */
     textarea#kb{
       position: fixed;
-      left: 0;
-      bottom: 0;
-      width: 1px;
-      height: 1px;
-      opacity: 0.001;
-      pointer-events: none;
-      font-size: 16px; /* prevents iOS zoom */
+      left: 8px;
+      bottom: calc(8px + var(--safe-b));
+      width: 2px;
+      height: 2px;
+      opacity: 0.01;          /* not 0 */
+      background: transparent;
+      color: transparent;
       border: 0;
       padding: 0;
       margin: 0;
-      background: transparent;
-      color: transparent;
+      font-size: 16px;        /* prevents iOS zoom */
+      caret-color: transparent;
+      outline: none;
+      z-index: 9999;
     }
 
     .hint{
@@ -179,7 +159,7 @@
 
     ::selection{ background: rgba(126,231,135,.25); }
 
-    /* ✅ Mobile: full-bleed terminal (no “window wrapper”) */
+    /* ✅ Mobile: full-bleed */
     @media (max-width: 600px){
       .frame{ padding: 0; }
       .terminal{
@@ -190,9 +170,7 @@
         border-right: 0;
         box-shadow: none;
       }
-      :root{
-        --pad: 12px; /* ~8–12pt feel */
-      }
+      :root{ --pad: 12px; } /* tight sides */
     }
   </style>
 </head>
@@ -205,7 +183,7 @@
     autocorrect="off"
     spellcheck="false"
     inputmode="text"
-    aria-hidden="true"
+    aria-label="terminal input"
   ></textarea>
 
   <div class="frame">
@@ -218,7 +196,6 @@
       </div>
 
       <div class="screen" id="screen" aria-live="polite"></div>
-      <div class="boot" id="boot" aria-hidden="true"><pre id="bootText"></pre></div>
     </div>
   </div>
 
@@ -227,8 +204,6 @@
       const terminal = document.getElementById("terminal");
       const screen = document.getElementById("screen");
       const kb = document.getElementById("kb");
-      const boot = document.getElementById("boot");
-      const bootText = document.getElementById("bootText");
 
       const host = "sol";
       const user = "ennio";
@@ -257,7 +232,7 @@
         "  clear         clear screen",
         "",
         "Tip: tap anywhere to focus. Type a command and press Enter.",
-      ].join("\\n");
+      ].join("\n");
 
       let current = "";
       let isAtBottom = true;
@@ -303,8 +278,8 @@
 
       function printBlock(text, cls=""){
         const safe = esc(text);
-        const lines = safe.split("\\n").map(l => `<span class="line${cls ? " "+cls : ""}">${l}</span>`);
-        history.push(lines.join("\\n"));
+        const lines = safe.split("\n").map(l => `<span class="line${cls ? " "+cls : ""}">${l}</span>`);
+        history.push(lines.join("\n"));
       }
 
       function unknown(cmd){
@@ -321,13 +296,13 @@
         if (cmd === "whoami"){ printLine(`${esc(user)}`); return; }
 
         if (cmd === "ls"){
-          const out = files.map(f => `${f.modified}  ${f.size.padStart(4," ")}  ${f.name}`).join("\\n");
+          const out = files.map(f => `${f.modified}  ${f.size.padStart(4," ")}  ${f.name}`).join("\n");
           printBlock(out, "");
           return;
         }
 
         if (cmd === "git log"){
-          const out = gitCommits.map(c => `${c.hash}  ${c.date}  ${c.msg}`).join("\\n");
+          const out = gitCommits.map(c => `${c.hash}  ${c.date}  ${c.msg}`).join("\n");
           printBlock(out, "");
           return;
         }
@@ -356,36 +331,36 @@
           (!hasFocusedOnce ? `<span class="line hint">Tap anywhere to type</span>` : ``)
         );
 
-        screen.innerHTML = lines.join("\\n");
+        screen.innerHTML = lines.join("\n");
         if (isAtBottom) scrollToBottom();
       }
 
       function safeFocus(){
         hasFocusedOnce = true;
-        try {
-          kb.focus(); // Safari-safe
-        } catch (e) {
-          // As a fallback, briefly enable pointer events and focus again
-          kb.style.pointerEvents = "auto";
-          kb.focus();
-          kb.style.pointerEvents = "none";
-        }
+        // Must be in a user gesture. No options object. Keep it simple.
+        try { kb.focus(); } catch (e) {}
         scrollToBottom();
         render();
       }
 
-      // Focus on tap/click anywhere in terminal
-      terminal.addEventListener("mousedown", () => safeFocus(), { passive: true });
-      terminal.addEventListener("touchstart", () => safeFocus(), { passive: true });
-      terminal.addEventListener("pointerdown", () => safeFocus(), { passive: true });
+      // ✅ Use click + touchend (Safari-friendly) — NOT passive.
+      terminal.addEventListener("click", (e) => {
+        // Avoid stealing focus when user is selecting text
+        if (window.getSelection && String(window.getSelection()) !== "") return;
+        safeFocus();
+      });
 
-      // Update bottom pin awareness
+      terminal.addEventListener("touchend", (e) => {
+        // Prevent the “ghost click” double-trigger on some setups
+        // but still allow scroll gestures (touchend is fine)
+        safeFocus();
+      }, { passive: false });
+
       screen.addEventListener("scroll", () => {
         const nearBottom = (screen.scrollTop + screen.clientHeight) >= (screen.scrollHeight - 12);
         isAtBottom = nearBottom;
       }, { passive: true });
 
-      // Mirror typing
       kb.addEventListener("input", () => {
         current = kb.value;
         render();
@@ -421,49 +396,12 @@
       }
       window.addEventListener("resize", updateKeyboardInset);
 
-      function bootBurst(){
-        const chars = "01#@$%&*+/:;=-_[]{}()<>|\\\\";
-        const lines = 7;
-        const cols = 42;
-
-        function randLine(){
-          let s = "";
-          for (let i=0;i<cols;i++) s += chars[Math.floor(Math.random()*chars.length)];
-          return s;
-        }
-
-        function paint(){
-          bootText.textContent =
-            "initializing display buffer…\\n" +
-            "loading font tables…\\n\\n" +
-            Array.from({length: lines}, randLine).join("\\n");
-        }
-
-        paint();
-        boot.classList.add("on");
-
-        let ticks = 0;
-        const t = setInterval(() => {
-          ticks++;
-          paint();
-          if (ticks >= 4){
-            clearInterval(t);
-            setTimeout(() => boot.classList.remove("on"), 250);
-          }
-        }, 160);
-      }
-
       // Init
       updateKeyboardInset();
       render();
       scrollToBottom();
-      bootBurst();
 
-      // Desktop auto-focus only (still lets you click elsewhere)
-      const isTouch = matchMedia("(pointer: coarse)").matches;
-      if (!isTouch){
-        setTimeout(() => safeFocus(), 200);
-      }
+      // Desktop: click to focus (no auto-focus to avoid fighting Safari policies)
     })();
   </script>
 </body>
