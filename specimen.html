@@ -240,9 +240,12 @@ function processCommand(command) {
   terminalContent.insertBefore(emptyLine, inputLine);
   
   setTimeout(() => {
-    const container = document.querySelector('.terminal-container');
-    container.scrollTop = container.scrollHeight;
-  }, 10);
+  const container = document.querySelector('.terminal-container');
+  container.scrollTop = container.scrollHeight;
+  
+  // Extra aggressive scroll for iOS
+  input.scrollIntoView({ behavior: 'smooth', block: 'end' });
+}, 10);
 }
 
 function clearTerminal() {
@@ -264,6 +267,13 @@ window.addEventListener('load', () => {
 
 document.addEventListener('click', () => {
   input.focus();
+});
+
+// Scroll when keyboard appears on mobile
+input.addEventListener('focus', () => {
+  setTimeout(() => {
+    input.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, 300);
 });
 </script>
 
