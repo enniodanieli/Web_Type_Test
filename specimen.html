@@ -87,7 +87,7 @@ body {
 <div class="terminal-container">
   <div class="terminal-content" id="terminal-content">
     <div class="terminal-line output">Last login: <span id="login-time"></span></div>
-    <div class="terminal-line output">Sol Mono v0.AINDABEM — type 'help' for available commands</div>
+    <div class="terminal-line output">Sol Mono v0.CU — type 'help' for available commands</div>
     <div class="terminal-line"></div>
 <form class="input-line" onsubmit="return false;" autocomplete="off">
     <span class="prompt">user@sol:~$</span>
@@ -182,9 +182,7 @@ Options:
 // Manage padding based on keyboard visibility
 input.addEventListener('focus', () => {
   terminalContent.style.paddingBottom = '300px';
-  setTimeout(() => {
-    terminalContainer.scrollTop = terminalContainer.scrollHeight;
-  }, 100);
+  // Don't scroll automatically on focus - let it stay where it is
 });
 
 input.addEventListener('blur', () => {
