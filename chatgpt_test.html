@@ -209,7 +209,7 @@
       const host = "sol";
       const user = "ennio";
       const cwd  = "~";
-      const version = "Sol Mono v0.CONTROl>";
+      const version = "Sol Mono v0.MADONNA!>";
 
       const files = [
         { name: "README.md", size: "3.1K", modified: "Feb 23 17:14" },
@@ -267,6 +267,9 @@
       }
 
       function scrollToBottom(){
+        // iOS Safari can land 1–2px off after viewport/keyboard changes.
+        // Force a hard pin immediately, then confirm on the next frame.
+        try { screen.scrollTop = 1e9; } catch (e) {}
         requestAnimationFrame(() => {
           screen.scrollTop = screen.scrollHeight;
         });
