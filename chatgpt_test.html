@@ -106,6 +106,7 @@
       caret-color: transparent;
       -webkit-user-select: text;
       user-select: text;
+      transition: padding-bottom 180ms ease;
     }
 
     .dim{ color: var(--muted); }
@@ -265,9 +266,11 @@
         return `<span class="prompt"><span class="user">${esc(user)}@${esc(host)}</span>:<span class="path">${esc(cwd)}</span>$</span> `;
       }
 
-      function scrollToBottom(){
+      function scrollToBottom(behavior = "auto"){
+        const bottom = document.getElementById("bottom");
+        if (!bottom) return;
         requestAnimationFrame(() => {
-          screen.scrollTop = screen.scrollHeight;
+          bottom.scrollIntoView({ block: "end", behavior });
         });
       }
 
@@ -330,7 +333,8 @@
           `<span class="line">${promptHTML()}<span id="typed">${esc(current)}</span><span class="cursor" aria-hidden="true"></span></span>` +
           (!hasFocusedOnce ? `<span class="line hint">Tap anywhere to type</span>` : ``)
         );
-
+        lines.push(`<span class="line" id="bottom"></span>`);
+        
         screen.innerHTML = lines.join("\n");
         if (isAtBottom) scrollToBottom();
       }
@@ -387,7 +391,7 @@
           kbPx = Math.max(0, Math.round(diff));
         }
         document.documentElement.style.setProperty("--kb", kbPx + "px");
-        if (document.activeElement === kb && isAtBottom) scrollToBottom();
+        if (isAtBottom) scrollToBottom("smooth");
       }
 
       if (window.visualViewport){
