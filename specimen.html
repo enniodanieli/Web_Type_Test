@@ -76,6 +76,7 @@ body {
   -webkit-appearance: none;
   appearance: none;
   vertical-align: baseline;
+  caret-shape: underscore;
 }
 </style>
 </head>
@@ -196,7 +197,7 @@ function addToHistory(command) {
   
   const historyLine = document.createElement('div');
   historyLine.className = 'terminal-line';
-  historyLine.innerHTML = `<span class="prompt">user@sol:~$</span> <span class="command">${escapeHtml(command)}</span>`;
+  historyLine.innerHTML = `<span class="prompt">user@sol:~$</span><span class="command" style="margin-left: 4px">${escapeHtml(command)}</span>`;
   
   terminalContent.insertBefore(historyLine, inputLine);
 }
