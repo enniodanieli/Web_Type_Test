@@ -17,53 +17,42 @@
 
 body {
   font-family: 'Sol';
-  font-size: 16px;
-  background: #0a0a0a;
-  color: #ff8800;
+  font-size: 14px;
+  background: #000;
+  color: #999;
   height: 100vh;
   overflow: hidden;
   -webkit-text-size-adjust: 100%;
 }
 
-@media (min-width: 768px) {
-  body {
-    font-size: 14px;
-  }
-}
-
 .terminal-container {
   height: 100vh;
   overflow-y: auto;
-  padding: 12px;
-}
-
-@media (min-width: 768px) {
-  .terminal-container {
-    padding: 24px;
-  }
+  padding: 8px;
 }
 
 .terminal-content {
-  max-width: 800px;
+  max-width: 480px;
 }
 
 .terminal-line {
   margin-bottom: 4px;
   line-height: 1.5;
+  word-wrap: break-word;
 }
 
 .prompt {
-  color: #ff8800;
+  color: #999;
 }
 
 .command {
-  color: #ff8800;
+  color: #999;
 }
 
 .output {
-  color: #cc6600;
-  margin-left: 0;
+  color: #666;
   white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .input-line {
@@ -75,69 +64,38 @@ body {
   background: transparent;
   border: none;
   outline: none;
-  color: #ff8800;
+  color: #999;
   font-family: 'Sol';
   font-size: 14px;
   padding: 0;
   margin-left: 4px;
-  caret-color: #ff8800;
-}
-
-
-
-/* View panels */
-.view {
-  display: none;
-  height: 100vh;
-  padding: 0;
-  overflow-y: auto;
-}
-
-.view.active {
-  display: block;
-}
-
-.placeholder {
-  color: #666;
-  text-align: center;
-  padding-top: 100px;
+  caret-color: #999;
+  -webkit-appearance: none;
+  appearance: none;
 }
 </style>
 </head>
 <body>
 
-<!-- Terminal View -->
-<div class="view active" id="terminal-view">
-  <div class="terminal-container">
-    <div class="terminal-content" id="terminal-content">
-      <div class="terminal-line output">Last login: <span id="login-time"></span></div>
-      <div class="terminal-line output">Sol Mono v1.0 — type 'help' for available commands</div>
-      <div class="terminal-line"></div>
-      
-      <form class="terminal-line input-line" onsubmit="return false;" autocomplete="off">
-        <span class="prompt">user@sol:~$</span>
-        <input 
-          type="text" 
-          class="input-field" 
-          id="command-input"
-          spellcheck="false"
-          autocorrect="off"
-          autocapitalize="off"
-          autocomplete="off"
-        >
-      </form>
-    </div>
+<div class="terminal-container">
+  <div class="terminal-content" id="terminal-content">
+    <div class="terminal-line output">Last login: <span id="login-time"></span></div>
+    <div class="terminal-line output">Sol Mono v1.0 — type 'help' for available commands</div>
+    <div class="terminal-line"></div>
+    
+    <form class="terminal-line input-line" onsubmit="return false;" autocomplete="off">
+      <span class="prompt">user@sol:~$</span>
+      <input 
+        type="text" 
+        class="input-field" 
+        id="command-input"
+        spellcheck="false"
+        autocorrect="off"
+        autocapitalize="off"
+        autocomplete="off"
+      >
+    </form>
   </div>
-</div>
-
-<!-- Code View -->
-<div class="view" id="code-view">
-  <div class="placeholder">BS Code view coming soon... (type 'terminal' to go back)</div>
-</div>
-
-<!-- Specimen View -->
-<div class="view" id="specimen-view">
-  <div class="placeholder">Specimen view coming soon... (type 'terminal' to go back)</div>
 </div>
 
 <script>
@@ -155,9 +113,6 @@ document.getElementById('login-time').textContent = timeStr;
 
 const input = document.getElementById('command-input');
 const terminalContent = document.getElementById('terminal-content');
-const terminalView = document.getElementById('terminal-view');
-const codeView = document.getElementById('code-view');
-const specimenView = document.getElementById('specimen-view');
 
 // Command responses
 const commands = {
@@ -223,13 +178,8 @@ input.addEventListener('keydown', (e) => {
     const command = input.value.trim();
     
     if (command) {
-      // Add command to history
       addToHistory(command);
-      
-      // Process command
       processCommand(command);
-      
-      // Clear input
       input.value = '';
     }
     
@@ -240,12 +190,10 @@ input.addEventListener('keydown', (e) => {
 function addToHistory(command) {
   const inputLine = document.querySelector('.input-line');
   
-  // Create history entry
   const historyLine = document.createElement('div');
   historyLine.className = 'terminal-line';
   historyLine.innerHTML = `<span class="prompt">user@sol:~$</span> <span class="command">${escapeHtml(command)}</span>`;
   
-  // Insert before input line
   terminalContent.insertBefore(historyLine, inputLine);
 }
 
@@ -253,31 +201,13 @@ function processCommand(command) {
   const inputLine = document.querySelector('.input-line');
   const lowerCommand = command.toLowerCase();
   
-  // Check for view switching commands
-  if (lowerCommand === 'code' || lowerCommand === 'editor') {
-    switchView('code');
-    return;
-  }
-  
-  if (lowerCommand === 'specimen' || lowerCommand === 'glyphs') {
-    switchView('specimen');
-    return;
-  }
-  
-  if (lowerCommand === 'terminal' || lowerCommand === 'exit') {
-    switchView('terminal');
-    return;
-  }
-  
   if (lowerCommand === 'clear') {
     clearTerminal();
     return;
   }
   
-  // Check for command responses
   let response = commands[command] || commands[lowerCommand];
   
-  // Handle cat with any filename
   if (lowerCommand.startsWith('cat ')) {
     const filename = lowerCommand.substring(4).trim();
     if (filename !== 'readme.txt' && filename !== 'README.txt') {
@@ -285,52 +215,31 @@ function processCommand(command) {
     }
   }
   
-  // Handle ping with any host
   if (lowerCommand.startsWith('ping ') && !commands[lowerCommand]) {
     const host = lowerCommand.substring(5).trim();
     response = `ping: cannot resolve ${host}: Unknown host`;
   }
   
-  // Default response
   if (!response) {
     response = `command not found: ${command}\nType 'help' for available commands`;
   }
   
-  // Add response
   const responseLine = document.createElement('div');
   responseLine.className = 'terminal-line output';
   responseLine.textContent = response;
   terminalContent.insertBefore(responseLine, inputLine);
   
-  // Add empty line
   const emptyLine = document.createElement('div');
   emptyLine.className = 'terminal-line';
   terminalContent.insertBefore(emptyLine, inputLine);
   
-  // Scroll to bottom
   setTimeout(() => {
     const container = document.querySelector('.terminal-container');
     container.scrollTop = container.scrollHeight;
   }, 10);
 }
 
-function switchView(viewName) {
-  // Hide all views
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  
-  // Show requested view
-  if (viewName === 'terminal') {
-    terminalView.classList.add('active');
-    setTimeout(() => input.focus(), 100);
-  } else if (viewName === 'code') {
-    codeView.classList.add('active');
-  } else if (viewName === 'specimen') {
-    specimenView.classList.add('active');
-  }
-}
-
 function clearTerminal() {
-  // Remove all lines except the input line
   const inputLine = document.querySelector('.input-line');
   terminalContent.innerHTML = '';
   terminalContent.appendChild(inputLine);
@@ -348,9 +257,7 @@ window.addEventListener('load', () => {
 });
 
 document.addEventListener('click', () => {
-  if (terminalView.classList.contains('active')) {
-    input.focus();
-  }
+  input.focus();
 });
 </script>
 
