@@ -209,7 +209,7 @@
       const host = "sol";
       const user = "ennio";
       const cwd  = "~";
-      const version = "Sol Mono v0.UNDERWEAR";
+      const version = "Sol Mono v0.MATILDA>";
 
       const files = [
         { name: "README.md", size: "3.1K", modified: "Feb 23 17:14" },
@@ -338,9 +338,17 @@
 
       function safeFocus(){
         hasFocusedOnce = true;
+        // When user taps to type, we behave like a real terminal: keep the prompt pinned.
+        isAtBottom = true;
+
         // Must be in a user gesture. No options object. Keep it simple.
         try { kb.focus(); } catch (e) {}
+
+        // Kick a couple of re-pins because iOS can resize the viewport a tick later.
         scrollToBottom();
+        setTimeout(scrollToBottom, 0);
+        setTimeout(scrollToBottom, 120);
+
         render();
       }
 
@@ -388,7 +396,11 @@
           kbPx = Math.max(0, Math.round(diff));
         }
         document.documentElement.style.setProperty("--kb", kbPx + "px");
-        if (document.activeElement === kb && isAtBottom) scrollToBottom();
+        if (document.activeElement === kb) {
+          scrollToBottom();
+        } else if (isAtBottom) {
+          scrollToBottom();
+        }
       }
 
       if (window.visualViewport){
