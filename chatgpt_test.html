@@ -209,7 +209,7 @@
       const host = "sol";
       const user = "ennio";
       const cwd  = "~";
-      const version = "Sol Mono v0.ANA";
+      const version = "Sol Mono v0.UNDERWEAR";
 
       const files = [
         { name: "README.md", size: "3.1K", modified: "Feb 23 17:14" },
@@ -331,6 +331,9 @@
           `<span class="line">${promptHTML()}<span id="typed">${esc(current)}</span><span class="cursor" aria-hidden="true"></span></span>` +
           (!hasFocusedOnce ? `<span class="line hint">Tap anywhere to type</span>` : ``)
         );
+
+        screen.innerHTML = lines.join("\n");
+        if (isAtBottom) scrollToBottom();
       }
 
       function safeFocus(){
