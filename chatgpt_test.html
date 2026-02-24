@@ -1,431 +1,663 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Sol Mono — Terminal Demo (v1.1)</title>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <title>Sol Mono — Terminal Demo (v1.1)</title>
 
-  <style>
-    @font-face{
-      font-family:"SolMono";
-      src:url("./Sol-Regular.woff2") format("woff2");
-      font-weight:400;
-      font-style:normal;
-      font-display:swap;
-    }
+    <style>
+      @font-face {
+        font-family: "SolMono";
+        src: url("./Sol-Regular.woff2") format("woff2");
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
 
-    :root{
-      --bg:#0b0f14;
-      --panel: rgba(8,12,18,.88);
-      --border: rgba(255,255,255,.08);
+      :root {
+        --bg: #0b0f14;
+        --panel: rgba(8, 12, 18, 0.88);
+        --border: rgba(255, 255, 255, 0.08);
 
-      --fg:#d7e0ea;
-      --muted:#8aa0b3;
-      --accent:#7ee787;
-      --warn:#f9c74f;
-      --err:#ff6b6b;
+        --fg: #d7e0ea;
+        --muted: #8aa0b3;
+        --accent: #7ee787;
+        --warn: #f9c74f;
+        --err: #ff6b6b;
 
-      --fs-mobile:14px;
-      --fs-desktop:13px;
-      --lh:1.45;
-      --ls:0px;
+        --fs-mobile: 14px;
+        --fs-desktop: 13px;
+        --lh: 1.45;
+        --ls: 0px;
 
-      --pad: 18px;
-      --radius: 14px;
+        --pad: 18px;
+        --radius: 14px;
 
-      --kb: 0px;
-      --safe-b: env(safe-area-inset-bottom, 0px);
-    }
+        --kb: 0px;
+        --safe-b: env(safe-area-inset-bottom, 0px);
+      }
 
-    html, body { height:100%; margin:0; }
-    body{
-      background:
-        radial-gradient(1200px 800px at 30% 20%, rgba(126,231,135,.08), transparent 60%),
-        radial-gradient(900px 600px at 70% 80%, rgba(88,166,255,.08), transparent 60%),
-        var(--bg);
-      color: var(--fg);
-      font-family:"SolMono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      letter-spacing: var(--ls);
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      overflow:hidden;
-    }
-
-    body { font-size: var(--fs-mobile); line-height: var(--lh); }
-    @media (min-width: 820px){
-      body { font-size: var(--fs-desktop); }
-    }
-
-    .frame{
-      height:100%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding: 18px;
-      box-sizing:border-box;
-    }
-
-    .terminal{
-      width:min(1100px, 100%);
-      height:min(760px, 100%);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: var(--panel);
-      backdrop-filter: blur(10px);
-      box-shadow: 0 20px 60px rgba(0,0,0,.55);
-      overflow:hidden;
-      display:flex;
-      flex-direction:column;
-      position: relative;
-    }
-
-    .topbar{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--border);
-      color: var(--muted);
-      user-select:none;
-      flex: 0 0 auto;
-    }
-    .dots{ display:flex; gap:7px; }
-    .dot{ width:10px; height:10px; border-radius:999px; background: rgba(255,255,255,.14); }
-    .title{ font-size: 12px; opacity:.9; }
-
-    .screen{
-      flex:1 1 auto;
-      overflow:auto;
-      padding: var(--pad);
-      padding-bottom: calc(var(--pad) + var(--kb) + var(--safe-b));
-      box-sizing:border-box;
-      white-space: pre-wrap;
-      word-break: break-word;
-      tab-size: 2;
-      -webkit-overflow-scrolling: touch;
-      caret-color: transparent;
-      -webkit-user-select: text;
-      user-select: text;
-    }
-
-    .dim{ color: var(--muted); }
-    .accent{ color: var(--accent); }
-    .warn{ color: var(--warn); }
-    .err{ color: var(--err); }
-
-    .line{ display:block; }
-    .prompt{ color: var(--muted); }
-    .prompt .user{ color: var(--accent); }
-    .prompt .path{ color: var(--muted); opacity:.95; }
-
-    .cursor{
-      display:inline-block;
-      width: 0.62em;
-      height: 1.05em;
-      transform: translateY(0.12em);
-      background: var(--fg);
-      margin-left: 0.06em;
-      animation: blink 1s steps(1) infinite;
-    }
-    @keyframes blink{ 50%{ opacity:0; } }
-
-    /* ✅ Hidden keyboard input:
-       Keep it focusable + on-screen (1px), to satisfy Safari/iOS. */
-    textarea#kb{
-      position: fixed;
-      left: 8px;
-      bottom: calc(8px + var(--safe-b));
-      width: 2px;
-      height: 2px;
-      opacity: 0.01;          /* not 0 */
-      background: transparent;
-      color: transparent;
-      border: 0;
-      padding: 0;
-      margin: 0;
-      font-size: 16px;        /* prevents iOS zoom */
-      caret-color: transparent;
-      outline: none;
-      z-index: 9999;
-    }
-
-    .hint{
-      display:inline-block;
-      margin-top: 6px;
-      color: var(--muted);
-      opacity: .65;
-      font-size: .95em;
-    }
-
-    ::selection{ background: rgba(126,231,135,.25); }
-
-    /* ✅ Mobile: full-bleed */
-    @media (max-width: 600px){
-      .frame{ padding: 0; }
-      .terminal{
-        width: 100%;
+      html,
+      body {
         height: 100%;
-        border-radius: 0;
-        border-left: 0;
-        border-right: 0;
-        box-shadow: none;
+        margin: 0;
       }
-      .topbar{ display:none; }
-      :root{ --pad: 12px; } /* tight sides */
-    }
-  </style>
-</head>
+      body {
+        background:
+          radial-gradient(1200px 800px at 30% 20%, rgba(126, 231, 135, 0.08), transparent 60%),
+          radial-gradient(900px 600px at 70% 80%, rgba(88, 166, 255, 0.08), transparent 60%),
+          var(--bg);
+        color: var(--fg);
+        font-family:
+          "SolMono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+          monospace;
+        letter-spacing: var(--ls);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        overflow: hidden;
+      }
 
-<body>
-  <textarea
-    id="kb"
-    autocomplete="off"
-    autocapitalize="off"
-    autocorrect="off"
-    spellcheck="false"
-    inputmode="text"
-    aria-label="terminal input"
-  ></textarea>
+      body {
+        font-size: var(--fs-mobile);
+        line-height: var(--lh);
+      }
+      @media (min-width: 820px) {
+        body {
+          font-size: var(--fs-desktop);
+        }
+      }
 
-  <div class="frame">
-    <div class="terminal" id="terminal" role="application" aria-label="Terminal demo">
-      <div class="topbar">
-        <div class="dots" aria-hidden="true">
-          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      .frame {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        box-sizing: border-box;
+      }
+
+      .terminal {
+        width: min(1100px, 100%);
+        height: min(760px, 100%);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--panel);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--border);
+        color: var(--muted);
+        user-select: none;
+        flex: 0 0 auto;
+      }
+      .dots {
+        display: flex;
+        gap: 7px;
+      }
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.14);
+      }
+      .title {
+        font-size: 12px;
+        opacity: 0.9;
+      }
+
+      .screen {
+        flex: 1 1 auto;
+        overflow: auto;
+        padding: var(--pad);
+        padding-bottom: calc(var(--pad) + var(--kb) + var(--safe-b));
+        box-sizing: border-box;
+        white-space: pre-wrap;
+        word-break: break-word;
+        tab-size: 2;
+        -webkit-overflow-scrolling: touch;
+        caret-color: transparent;
+        -webkit-user-select: text;
+        user-select: text;
+      }
+
+      .dim {
+        color: var(--muted);
+      }
+      .accent {
+        color: var(--accent);
+      }
+      .warn {
+        color: var(--warn);
+      }
+      .err {
+        color: var(--err);
+      }
+
+      .nudge {
+        color: var(--accent);
+        opacity: 0.92;
+      }
+
+      .line {
+        display: block;
+      }
+      .prompt {
+        color: var(--muted);
+      }
+      .prompt .user {
+        color: var(--accent);
+      }
+      .prompt .path {
+        color: var(--muted);
+        opacity: 0.95;
+      }
+
+      .cursor {
+        display: inline-block;
+        width: 0.62em;
+        height: 1.05em;
+        transform: translateY(0.12em);
+        background: var(--fg);
+        margin-left: 0.06em;
+        animation: blink 1s steps(1) infinite;
+      }
+      @keyframes blink {
+        50% {
+          opacity: 0;
+        }
+      }
+
+      /* ✅ Hidden keyboard input:
+       Keep it focusable + on-screen (1px), to satisfy Safari/iOS. */
+      textarea#kb {
+        position: fixed;
+        left: 8px;
+        bottom: calc(8px + var(--safe-b));
+        width: 2px;
+        height: 2px;
+        opacity: 0.01; /* not 0 */
+        background: transparent;
+        color: transparent;
+        border: 0;
+        padding: 0;
+        margin: 0;
+        font-size: 16px; /* prevents iOS zoom */
+        caret-color: transparent;
+        outline: none;
+        z-index: 9999;
+      }
+
+      .hint {
+        display: inline-block;
+        margin-top: 6px;
+        color: var(--muted);
+        opacity: 0.65;
+        font-size: 0.95em;
+      }
+
+      ::selection {
+        background: rgba(126, 231, 135, 0.25);
+      }
+
+      /* ✅ Mobile: full-bleed */
+      @media (max-width: 600px) {
+        .frame {
+          padding: 0;
+        }
+        .terminal {
+          width: 100%;
+          height: 100%;
+          border-radius: 0;
+          border-left: 0;
+          border-right: 0;
+          box-shadow: none;
+        }
+        .topbar {
+          display: none;
+        }
+        :root {
+          --pad: 12px;
+        } /* tight sides */
+      }
+    </style>
+  </head>
+
+  <body>
+    <textarea
+      id="kb"
+      autocomplete="off"
+      autocapitalize="off"
+      autocorrect="off"
+      spellcheck="false"
+      inputmode="text"
+      aria-label="terminal input"
+    ></textarea>
+
+    <div class="frame">
+      <div class="terminal" id="terminal" role="application" aria-label="Terminal demo">
+        <div class="topbar">
+          <div class="dots" aria-hidden="true">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+          <div class="title">Sol Mono — Terminal Demo</div>
         </div>
-        <div class="title">Sol Mono — Terminal Demo</div>
+
+        <div class="screen" id="screen" aria-live="polite"></div>
       </div>
-
-      <div class="screen" id="screen" aria-live="polite"></div>
     </div>
-  </div>
 
-  <script>
-    (() => {
-      const terminal = document.getElementById("terminal");
-      const screen = document.getElementById("screen");
-      const kb = document.getElementById("kb");
+    <script>
+      (() => {
+        const terminal = document.getElementById("terminal");
+        const screen = document.getElementById("screen");
+        const kb = document.getElementById("kb");
 
-      const host = "sol";
-      const user = "ennio";
-      const cwd  = "~";
-      const version = "Sol Mono v0.YENDO>";
+        const host = "localhost";
+        const user = "guest";
+        const cwd = "~";
+        const version = "Sol Mono v0.MOTHER>";
 
-      const files = [
-        { name: "README.md", size: "3.1K", modified: "Feb 23 17:14" },
-        { name: "specimen.txt", size: "2.4K", modified: "Feb 22 21:08" },
-        { name: "notes.txt", size: "1.2K", modified: "Feb 20 09:19" },
-        { name: "index.html", size: "9.8K", modified: "Feb 23 17:21" },
-      ];
+        const files = [
+          { name: "README.md", size: "3.1K", modified: "Feb 23 17:14" },
+          { name: "specimen.txt", size: "2.4K", modified: "Feb 22 21:08" },
+          { name: "notes.txt", size: "1.2K", modified: "Feb 20 09:19" },
+          { name: "index.html", size: "9.8K", modified: "Feb 23 17:21" }
+        ];
 
-      const gitCommits = [
-        { hash:"9f3a2c1", date:"2026-02-23", msg:"prototype: inline terminal input on mobile" },
-        { hash:"71c4b0e", date:"2026-02-22", msg:"layout: basic terminal frame + theme" },
-        { hash:"4a8d11c", date:"2026-02-21", msg:"font: woff2 export + fallback stack" },
-      ];
+        const gitCommits = [
+          {
+            hash: "9f3a2c1",
+            date: "2026-02-23",
+            msg: "prototype: inline terminal input on mobile"
+          },
+          {
+            hash: "71c4b0e",
+            date: "2026-02-22",
+            msg: "layout: basic terminal frame + theme"
+          },
+          {
+            hash: "4a8d11c",
+            date: "2026-02-21",
+            msg: "font: woff2 export + fallback stack"
+          }
+        ];
 
-      const helpText = [
-        "Available commands:",
-        "  help          show this message",
-        "  whoami        who are you talking to?",
-        "  ls            list files",
-        "  git log       view commit history",
-        "  clear         clear screen",
-        "",
-        "Tip: tap anywhere to focus. Type a command and press Enter.",
-      ].join("\n");
+        const helpText = [
+          "Available commands:",
+          "  help          show this message",
+          "  whoami        who are you talking to?",
+          "  ls            list files",
+          "  git log       view commit history",
+          "  clear         clear screen",
+          "",
+          "Tip: tap anywhere to focus. Type a command and press Enter."
+        ].join("\n");
 
-      let current = "";
-      let isAtBottom = true;
-      let hasFocusedOnce = false;
-      const history = [];
+        let current = "";
+        let isAtBottom = true;
+        let hasFocusedOnce = false;
+        const history = [];
+        let typedEl = null;
 
-      function esc(s){
-        return s.replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
-      }
+        // --- Idle nudge (Nudge #1 only) ---
+        const NUDGE_DELAY_MS = 2000; // tweak later
+        const NUDGE_IN_MS = 90 * NUDGE_MSG.length;
+        const NUDGE_HOLD_MS = 1800;
+        const NUDGE_OUT_MS = 420;
 
-      function nowLoginLine(){
-        const d = new Date();
-        const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-        const mons = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-        const day = days[d.getDay()];
-        const mon = mons[d.getMonth()];
-        const date = String(d.getDate()).padStart(2,"0");
+        const NUDGE_MSG = "hey you — tap here";
+        const SCRAMBLE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#$%&*+-/\\=_:;?";
 
-        let h = d.getHours();
-        const ampm = h >= 12 ? "PM" : "AM";
-        h = h % 12; if (h === 0) h = 12;
-        const hh = String(h).padStart(2,"0");
-        const mm = String(d.getMinutes()).padStart(2,"0");
-        const ss = String(d.getSeconds()).padStart(2,"0");
+        let idleTimer = null;
+        let nudgeUsed = false;
 
-        return `Last login: ${day}, ${mon} ${date} at ${hh}:${mm}:${ss} ${ampm}`;
-      }
+        const nudge = {
+          active: false,
+          phase: "in", // "in" | "hold" | "out"
+          text: "",
+          raf: 0,
+          t0: 0
+        };
 
-      function promptHTML(){
-        return `<span class="prompt"><span class="user">${esc(user)}@${esc(host)}</span>:<span class="path">${esc(cwd)}</span>$</span> `;
-      }
-
-      function scrollToBottom(){
-        // iOS Safari can land 1–2px off after viewport/keyboard changes.
-        // Force a hard pin immediately, then confirm on the next frame.
-        try { screen.scrollTop = 1e9; } catch (e) {}
-        requestAnimationFrame(() => {
-          screen.scrollTop = screen.scrollHeight;
-        });
-      }
-
-      function printLine(html, cls=""){
-        const classAttr = cls ? `line ${cls}` : `line`;
-        history.push(`<span class="${classAttr}">${html}</span>`);
-      }
-
-      function printBlock(text, cls=""){
-        const safe = esc(text);
-        const lines = safe.split("\n").map(l => `<span class="line${cls ? " "+cls : ""}">${l}</span>`);
-        history.push(lines.join("\n"));
-      }
-
-      function unknown(cmd){
-        printLine(`<span class="err">command not found:</span> ${esc(cmd)} <span class="dim">(try 'help')</span>`);
-      }
-
-      function runCommand(raw){
-        const cmd = raw.trim();
-        printLine(`${promptHTML()}${esc(raw)}`);
-
-        if (!cmd) return;
-
-        if (cmd === "help"){ printBlock(helpText, "dim"); return; }
-        if (cmd === "whoami"){ printLine(`${esc(user)}`); return; }
-
-        if (cmd === "ls"){
-          const out = files.map(f => `${f.modified}  ${f.size.padStart(4," ")}  ${f.name}`).join("\n");
-          printBlock(out, "");
-          return;
+        function cancelNudge() {
+          if (!nudge.active) return;
+          if (nudge.raf) cancelAnimationFrame(nudge.raf);
+          nudge.active = false;
+          nudge.phase = "in";
+          nudge.text = "";
+          nudge.raf = 0;
+          nudge.t0 = 0;
         }
 
-        if (cmd === "git log"){
-          const out = gitCommits.map(c => `${c.hash}  ${c.date}  ${c.msg}`).join("\n");
-          printBlock(out, "");
-          return;
+        function resetIdleTimer() {
+          if (idleTimer) clearTimeout(idleTimer);
+          if (nudgeUsed) return; // only one nudge for now
+          idleTimer = setTimeout(() => {
+            if (current.length === 0 && document.activeElement !== kb) startNudge();
+          }, NUDGE_DELAY_MS);
         }
 
-        if (cmd === "clear"){
-          history.length = 0;
-          return;
+        function scrambleFrame(target, progress) {
+          // progress: 0..1
+          const n = target.length;
+          const lock = Math.floor(progress * (n + 1)); // lock left->right
+          let out = "";
+          for (let i = 0; i < n; i++) {
+            if (i < lock) out += target[i];
+            else out += SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
+          }
+          return out;
         }
 
-        unknown(cmd);
-      }
+        function startNudge() {
+          if (nudgeUsed) return;
+          cancelNudge();
+          nudgeUsed = true;
 
-      function render(){
-        // While typing (kb focused), keep the terminal pinned.
-        // iOS can report scroll metrics 1–2px off during keyboard/layout changes,
-        // which causes a tiny nudge on the first keystroke.
-        if (document.activeElement !== kb) {
-          const nearBottom = (screen.scrollTop + screen.clientHeight) >= (screen.scrollHeight - 12);
-          isAtBottom = nearBottom;
-        } else {
+          nudge.active = true;
+          nudge.phase = "in";
+          nudge.t0 = performance.now();
+
+          const tick = (t) => {
+            if (!nudge.active) return;
+
+            const elapsed = t - nudge.t0;
+
+            if (nudge.phase === "in") {
+              const p = Math.min(1, elapsed / NUDGE_IN_MS);
+              nudge.text = scrambleFrame(NUDGE_MSG, p);
+              setTypedOnly(nudge.text, true);
+              if (p >= 1) {
+                nudge.phase = "hold";
+                nudge.t0 = t;
+              }
+            } else if (nudge.phase === "hold") {
+              nudge.text = NUDGE_MSG;
+              setTypedOnly(nudge.text, true);
+              if (elapsed >= NUDGE_HOLD_MS) {
+                nudge.phase = "out";
+                nudge.t0 = t;
+              }
+            } else if (nudge.phase === "out") {
+              const p = Math.min(1, elapsed / NUDGE_OUT_MS);
+              const keep = Math.max(0, Math.floor((1 - p) * NUDGE_MSG.length));
+              let out = "";
+              for (let i = 0; i < NUDGE_MSG.length; i++) {
+                if (i < keep)
+                  out += SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
+                else out += " ";
+              }
+              nudge.text = out;
+              setTypedOnly(nudge.text, true);
+              render();
+              if (p >= 1) {
+                cancelNudge();
+                setTypedOnly("", false);
+                render(); // one final render is OK to restore the normal prompt state
+              }
+            }
+
+            nudge.raf = requestAnimationFrame(tick);
+          };
+
+          nudge.raf = requestAnimationFrame(tick);
+        }
+
+        function esc(s) {
+          return s.replace(
+            /[&<>"]/g,
+            (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]
+          );
+        }
+
+        function nowLoginLine() {
+          const d = new Date();
+          const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+          const mons = [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec"
+          ];
+          const day = days[d.getDay()];
+          const mon = mons[d.getMonth()];
+          const date = String(d.getDate()).padStart(2, "0");
+
+          let h = d.getHours();
+          const ampm = h >= 12 ? "PM" : "AM";
+          h = h % 12;
+          if (h === 0) h = 12;
+          const hh = String(h).padStart(2, "0");
+          const mm = String(d.getMinutes()).padStart(2, "0");
+          const ss = String(d.getSeconds()).padStart(2, "0");
+
+          return `Last login: ${day}, ${mon} ${date} at ${hh}:${mm}:${ss} ${ampm}`;
+        }
+
+        function promptHTML() {
+          return `<span class="prompt"><span class="user">${esc(user)}@${esc(host)}</span>:<span class="path">${esc(cwd)}</span>$</span> `;
+        }
+
+        function scrollToBottom() {
+          // iOS Safari can land 1–2px off after viewport/keyboard changes.
+          // Force a hard pin immediately, then confirm on the next frame.
+          try {
+            screen.scrollTop = 1e9;
+          } catch (e) {}
+          requestAnimationFrame(() => {
+            screen.scrollTop = screen.scrollHeight;
+          });
+        }
+
+        function printLine(html, cls = "") {
+          const classAttr = cls ? `line ${cls}` : `line`;
+          history.push(`<span class="${classAttr}">${html}</span>`);
+        }
+
+        function printBlock(text, cls = "") {
+          const safe = esc(text);
+          const lines = safe
+            .split("\n")
+            .map((l) => `<span class="line${cls ? " " + cls : ""}">${l}</span>`);
+          history.push(lines.join("\n"));
+        }
+
+        function unknown(cmd) {
+          printLine(
+            `<span class="err">command not found:</span> ${esc(cmd)} <span class="dim">(try 'help')</span>`
+          );
+        }
+
+        function runCommand(raw) {
+          const cmd = raw.trim();
+          printLine(`${promptHTML()}${esc(raw)}`);
+
+          if (!cmd) return;
+
+          if (cmd === "help") {
+            printBlock(helpText, "dim");
+            return;
+          }
+          if (cmd === "whoami") {
+            printLine(`${esc(user)}`);
+            return;
+          }
+
+          if (cmd === "ls") {
+            const out = files
+              .map((f) => `${f.modified}  ${f.size.padStart(4, " ")}  ${f.name}`)
+              .join("\n");
+            printBlock(out, "");
+            return;
+          }
+
+          if (cmd === "git log") {
+            const out = gitCommits.map((c) => `${c.hash}  ${c.date}  ${c.msg}`).join("\n");
+            printBlock(out, "");
+            return;
+          }
+
+          if (cmd === "clear") {
+            history.length = 0;
+            return;
+          }
+
+          unknown(cmd);
+        }
+
+        function render() {
+          // While typing (kb focused), keep the terminal pinned.
+          // iOS can report scroll metrics 1–2px off during keyboard/layout changes,
+          // which causes a tiny nudge on the first keystroke.
+          if (document.activeElement !== kb) {
+            const nearBottom = screen.scrollTop + screen.clientHeight >= screen.scrollHeight - 12;
+            isAtBottom = nearBottom;
+          } else {
+            isAtBottom = true;
+          }
+
+          const lines = [];
+          lines.push(`<span class="line dim">${esc(nowLoginLine())}</span>`);
+          lines.push(
+            `<span class="line"><span class="accent">${esc(version)}</span> — type <span class="warn">'help'</span> for available commands</span>`
+          );
+          lines.push(`<span class="line"></span>`);
+
+          for (const item of history) lines.push(item);
+
+          lines.push(
+            `<span class="line">${promptHTML()}<span id="typed">${esc(current)}</span><span class="cursor" aria-hidden="true"></span></span>` +
+              (!hasFocusedOnce ? `<span class="line hint">Tap anywhere to type</span>` : ``)
+          );
+
+          screen.innerHTML = lines.join("\n");
+          typedEl = document.getElementById("typed");
+          if (isAtBottom) scrollToBottom();
+        }
+
+        function setTypedOnly(text, isNudge) {
+          if (!typedEl) return;
+          typedEl.textContent = text;
+          typedEl.className = isNudge ? "nudge" : "";
+        }
+
+        function safeFocus() {
+          cancelNudge();
+          resetIdleTimer();
+          hasFocusedOnce = true;
+          // When user taps to type, we behave like a real terminal: keep the prompt pinned.
           isAtBottom = true;
+
+          // Must be in a user gesture. No options object. Keep it simple.
+          try {
+            kb.focus();
+          } catch (e) {}
+
+          // Kick a couple of re-pins because iOS can resize the viewport a tick later.
+          scrollToBottom();
+          setTimeout(scrollToBottom, 0);
+          setTimeout(scrollToBottom, 120);
+
+          render();
         }
 
-        const lines = [];
-        lines.push(`<span class="line dim">${esc(nowLoginLine())}</span>`);
-        lines.push(`<span class="line"><span class="accent">${esc(version)}</span> — type <span class="warn">'help'</span> for available commands</span>`);
-        lines.push(`<span class="line"></span>`);
+        // ✅ Use click + touchend (Safari-friendly) — NOT passive.
+        terminal.addEventListener("click", (e) => {
+          // Avoid stealing focus when user is selecting text
+          if (window.getSelection && String(window.getSelection()) !== "") return;
+          safeFocus();
+        });
 
-        for (const item of history) lines.push(item);
-
-        lines.push(
-          `<span class="line">${promptHTML()}<span id="typed">${esc(current)}</span><span class="cursor" aria-hidden="true"></span></span>` +
-          (!hasFocusedOnce ? `<span class="line hint">Tap anywhere to type</span>` : ``)
+        terminal.addEventListener(
+          "touchend",
+          (e) => {
+            // Prevent the “ghost click” double-trigger on some setups
+            // but still allow scroll gestures (touchend is fine)
+            safeFocus();
+          },
+          { passive: false }
         );
 
-        screen.innerHTML = lines.join("\n");
-        if (isAtBottom) scrollToBottom();
-      }
+        screen.addEventListener(
+          "scroll",
+          () => {
+            cancelNudge();
+            resetIdleTimer();
+            const nearBottom = screen.scrollTop + screen.clientHeight >= screen.scrollHeight - 12;
+            isAtBottom = nearBottom;
+          },
+          { passive: true }
+        );
 
-      function safeFocus(){
-        hasFocusedOnce = true;
-        // When user taps to type, we behave like a real terminal: keep the prompt pinned.
-        isAtBottom = true;
-
-        // Must be in a user gesture. No options object. Keep it simple.
-        try { kb.focus(); } catch (e) {}
-
-        // Kick a couple of re-pins because iOS can resize the viewport a tick later.
-        scrollToBottom();
-        setTimeout(scrollToBottom, 0);
-        setTimeout(scrollToBottom, 120);
-
-        render();
-      }
-
-      // ✅ Use click + touchend (Safari-friendly) — NOT passive.
-      terminal.addEventListener("click", (e) => {
-        // Avoid stealing focus when user is selecting text
-        if (window.getSelection && String(window.getSelection()) !== "") return;
-        safeFocus();
-      });
-
-      terminal.addEventListener("touchend", (e) => {
-        // Prevent the “ghost click” double-trigger on some setups
-        // but still allow scroll gestures (touchend is fine)
-        safeFocus();
-      }, { passive: false });
-
-      screen.addEventListener("scroll", () => {
-        const nearBottom = (screen.scrollTop + screen.clientHeight) >= (screen.scrollHeight - 12);
-        isAtBottom = nearBottom;
-      }, { passive: true });
-
-      kb.addEventListener("input", () => {
-        current = kb.value;
-        render();
-      });
-
-      kb.addEventListener("keydown", (e) => {
-        if (e.key === "Enter"){
-          e.preventDefault();
-          const toRun = current;
-          current = "";
-          kb.value = "";
-          runCommand(toRun);
+        kb.addEventListener("input", () => {
+          cancelNudge();
+          resetIdleTimer();
+          current = kb.value;
           render();
-          scrollToBottom();
+        });
+
+        kb.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            const toRun = current;
+            current = "";
+            kb.value = "";
+            runCommand(toRun);
+            render();
+            scrollToBottom();
+          }
+        });
+
+        function updateKeyboardInset() {
+          const vv = window.visualViewport;
+          let kbPx = 0;
+
+          if (vv) {
+            const diff = window.innerHeight - vv.height - vv.offsetTop;
+            kbPx = Math.max(0, Math.round(diff));
+          }
+          document.documentElement.style.setProperty("--kb", kbPx + "px");
+          if (document.activeElement === kb) {
+            scrollToBottom();
+          } else if (isAtBottom) {
+            scrollToBottom();
+          }
         }
-      });
 
-      function updateKeyboardInset(){
-        const vv = window.visualViewport;
-        let kbPx = 0;
-
-        if (vv){
-          const diff = window.innerHeight - vv.height - vv.offsetTop;
-          kbPx = Math.max(0, Math.round(diff));
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener("resize", updateKeyboardInset);
+          window.visualViewport.addEventListener("scroll", updateKeyboardInset);
         }
-        document.documentElement.style.setProperty("--kb", kbPx + "px");
-        if (document.activeElement === kb) {
-          scrollToBottom();
-        } else if (isAtBottom) {
-          scrollToBottom();
-        }
-      }
+        window.addEventListener("resize", updateKeyboardInset);
 
-      if (window.visualViewport){
-        window.visualViewport.addEventListener("resize", updateKeyboardInset);
-        window.visualViewport.addEventListener("scroll", updateKeyboardInset);
-      }
-      window.addEventListener("resize", updateKeyboardInset);
+        // Init
+        updateKeyboardInset();
+        render();
+        scrollToBottom();
+        resetIdleTimer();
 
-      // Init
-      updateKeyboardInset();
-      render();
-      scrollToBottom();
-
-      // Desktop: click to focus (no auto-focus to avoid fighting Safari policies)
-    })();
-  </script>
-</body>
+        // Desktop: click to focus (no auto-focus to avoid fighting Safari policies)
+      })();
+    </script>
+  </body>
 </html>
