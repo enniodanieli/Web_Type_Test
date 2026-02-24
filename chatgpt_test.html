@@ -312,12 +312,12 @@
         let typedEl = null;
 
         // --- Idle nudge (Nudge #1 only) ---
-        const NUDGE_DELAY_MS = 2000; // tweak later
-        const NUDGE_IN_MS = 90 * NUDGE_MSG.length;
+        const NUDGE_DELAY_MS = 2000; // testing
+        const NUDGE_MSG = "hey you — tap here";
+        const NUDGE_IN_MS = 90 * NUDGE_MSG.length; // ~90ms per char
         const NUDGE_HOLD_MS = 1800;
         const NUDGE_OUT_MS = 420;
 
-        const NUDGE_MSG = "hey you — tap here";
         const SCRAMBLE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#$%&*+-/\\=_:;?";
 
         let idleTimer = null;
@@ -351,13 +351,21 @@
 
         function scrambleFrame(target, progress) {
           // progress: 0..1
+          // Reveal grows: 1 char, 2 chars, 3...; newest char scrambles while arriving.
           const n = target.length;
-          const lock = Math.floor(progress * (n + 1)); // lock left->right
+          const visible = Math.max(1, Math.ceil(progress * n));
+
           let out = "";
-          for (let i = 0; i < n; i++) {
-            if (i < lock) out += target[i];
+          const lockedCount = Math.max(0, visible - 1);
+
+          for (let i = 0; i < lockedCount; i++) out += target[i];
+
+          const newestIndex = visible - 1;
+          if (newestIndex < n) {
+            if (progress >= 1) out += target[newestIndex];
             else out += SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
           }
+
           return out;
         }
 
@@ -401,7 +409,6 @@
               }
               nudge.text = out;
               setTypedOnly(nudge.text, true);
-              render();
               if (p >= 1) {
                 cancelNudge();
                 setTypedOnly("", false);
