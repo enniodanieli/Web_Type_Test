@@ -6,11 +6,11 @@
       name="viewport"
       content="width=device-width,initial-scale=1,viewport-fit=cover"
     />
-    <title>Sol Mono — Terminal Demo (v1.1)</title>
+    <title>Terminal (v1.1)</title>
 
     <style>
       @font-face {
-        font-family: 'SolMono';
+        font-family: 'TerminalMono';
         src: url('./Sol-Regular.woff2') format('woff2');
         font-weight: 400;
         font-style: normal;
@@ -36,6 +36,7 @@
 
         --pad: 18px;
         --radius: 14px;
+        --help-indent: 2ch;
 
         --kb: 0px;
         --safe-b: env(safe-area-inset-bottom, 0px);
@@ -61,7 +62,7 @@
           var(--bg);
         color: var(--fg);
         font-family:
-          'SolMono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+          'TerminalMono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
           'Liberation Mono', monospace;
         letter-spacing: var(--ls);
         -webkit-font-smoothing: antialiased;
@@ -160,6 +161,21 @@
         opacity: 0.92;
       }
 
+      .helpword {
+        color: var(--nudge);
+      }
+
+      .helpitem {
+        padding-left: var(--help-indent);
+      }
+      .helpitem .help-cmd {
+        display: inline-block;
+        min-width: 8ch;
+      }
+      .helpitem .help-desc {
+        color: var(--muted);
+      }
+
       .line {
         display: block;
       }
@@ -242,6 +258,7 @@
         }
         :root {
           --pad: 12px;
+          --help-indent: 1ch;
         } /* tight sides */
       }
     </style>
@@ -271,7 +288,7 @@
             <div class="dot"></div>
             <div class="dot"></div>
           </div>
-          <div class="title">Sol Mono — Terminal Demo</div>
+          <div class="title">Terminal</div>
         </div>
 
         <div class="screen" id="screen" aria-live="polite"></div>
@@ -287,7 +304,7 @@
         const host = 'machine';
         const user = 'guest';
         const cwd = '~';
-        const version = 'Sol Mono v0.MOTHER>';
+        const version = 'v0.MOTHER>';
 
         const files = [
           { name: 'README.md', size: '3.1K', modified: 'Feb 23 17:14' },
@@ -295,6 +312,13 @@
           { name: 'notes.txt', size: '1.2K', modified: 'Feb 20 09:19' },
           { name: 'index.html', size: '9.8K', modified: 'Feb 23 17:21' },
         ];
+
+        const fileContents = {
+          'README.md': 'Terminal prototype.\n\nType help to see available commands.',
+          'specimen.txt': 'Specimen preview.\nABCDEFGHIJKLMNOPQRSTUVWXYZ\n0123456789',
+          'notes.txt': 'Notes:\nRefine spacing. Refine colour. Keep it dry.',
+          'index.html': '<!doctype html> ...',
+        };
 
         const gitCommits = [
           {
@@ -314,16 +338,13 @@
           },
         ];
 
-        const helpText = [
-          'Commands',
-          '  help          show this message',
-          '  whoami        who are you talking to?',
-          '  ls            list files',
-          '  git log       view commit history',
-          '  clear         clear screen',
-          '',
-          'Tip: tap anywhere to focus. Type a command and press Enter.',
-        ].join('\n');
+        const helpItems = [
+          { cmd: 'help', desc: 'show this message' },
+          { cmd: 'whoami', desc: 'who are you talking to?' },
+          { cmd: 'ls', desc: 'list files' },
+          { cmd: 'git log', desc: 'view commit history' },
+          { cmd: 'clear', desc: 'clear screen' },
+        ];
 
         // === WRAP_TEST_START ===
 const SHOW_WRAP_TEST = false;
@@ -612,9 +633,18 @@ const WRAP_TEST_TEXT =
         }
 
         function unknown(cmd) {
-          printLine(
-            `<span class="err">command not found:</span> ${esc(cmd)} <span class="dim">(try 'help')</span>`,
-          );
+          printLine(`<span class="err">${esc(cmd)}: command not found</span>`);
+          printLine(`Type '<span class="helpword">help</span>' for commands.`);
+        }
+
+        function printHelp() {
+          printLine('Commands', 'dim');
+          for (const item of helpItems) {
+            printLine(
+              `<span class="helpitem"><span class="help-cmd">${esc(item.cmd)}</span><span class="help-desc">${esc(item.desc)}</span></span>`,
+              '',
+            );
+          }
         }
 
         function runCommand(raw) {
@@ -624,7 +654,7 @@ const WRAP_TEST_TEXT =
           if (!cmd) return;
 
           if (cmd === 'help') {
-            printBlock(helpText, 'dim');
+            printHelp();
             return;
           }
           if (cmd === 'whoami') {
@@ -647,6 +677,26 @@ const WRAP_TEST_TEXT =
               .map((c) => `${c.hash}  ${c.date}  ${c.msg}`)
               .join('\n');
             printBlock(out, '');
+            return;
+          }
+
+          if (cmd.startsWith('cat')) {
+            const parts = raw.trim().split(/\s+/);
+
+            if (parts.length === 1) {
+              printLine('cat: missing file operand');
+              printLine("Try 'ls'.");
+              return;
+            }
+
+            const filename = parts.slice(1).join(' ');
+
+            if (!fileContents[filename]) {
+              printLine(`cat: ${esc(filename)}: No such file`);
+              return;
+            }
+
+            printBlock(fileContents[filename]);
             return;
           }
 
@@ -678,7 +728,7 @@ const WRAP_TEST_TEXT =
             `<span class="line">Connection established.</span>`,
           );
           lines.push(
-            `<span class="line">Type a command.</span>`,
+            `<span class="line">Awaiting input.</span>`,
           );
           // === INITIAL_SCREEN_END ===
 
