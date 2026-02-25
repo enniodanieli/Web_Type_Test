@@ -313,9 +313,12 @@
 
         // --- Idle nudge (Nudge #1 only) ---
         const NUDGE_DELAY_MS = 2000; // testing
-        const NUDGE_MSG = "hey you — tap here";
-        const NUDGE_IN_MS = 90 * NUDGE_MSG.length; // ~90ms per char
-        const NUDGE_HOLD_MS = 1800;
+        const NUDGE_PART1 = "Hey :-)";
+        const NUDGE_PART1_GRIN = "Hey :-D";
+        const NUDGE_PART2 = "Tap here";
+        const NUDGE_IN_SPEED = 40; // ms per char (fast)
+        const NUDGE_PAUSE1_MS = 1400; // longer pause after part 1
+        const NUDGE_HOLD_MS = 1600;
         const NUDGE_OUT_MS = 420;
 
         const SCRAMBLE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#$%&*+-/\\=_:;?";
@@ -374,45 +377,68 @@
           cancelNudge();
           nudgeUsed = true;
 
+          // Ghost command suggestions (no execution)
+          const sequence = [
+            { text: "help" },
+            { text: "whoami" },
+            { text: "ls" }
+          ];
+
+          let stepIndex = 0;
+          let phase = "in"; // in | hold | out
+
           nudge.active = true;
-          nudge.phase = "in";
           nudge.t0 = performance.now();
 
           const tick = (t) => {
             if (!nudge.active) return;
 
+            const currentStep = sequence[stepIndex];
+            const fullText = currentStep.text;
             const elapsed = t - nudge.t0;
 
-            if (nudge.phase === "in") {
-              const p = Math.min(1, elapsed / NUDGE_IN_MS);
-              nudge.text = scrambleFrame(NUDGE_MSG, p);
-              setTypedOnly(nudge.text, true);
-              if (p >= 1) {
-                nudge.phase = "hold";
+            // --- IN (realistic typing speed)
+            if (phase === "in") {
+              const chars = Math.min(
+                fullText.length,
+                Math.floor(elapsed / 30)
+              );
+
+              setTypedOnly(fullText.slice(0, chars), true);
+
+              if (chars >= fullText.length) {
+                phase = "hold";
                 nudge.t0 = t;
               }
-            } else if (nudge.phase === "hold") {
-              nudge.text = NUDGE_MSG;
-              setTypedOnly(nudge.text, true);
-              if (elapsed >= NUDGE_HOLD_MS) {
-                nudge.phase = "out";
+            }
+
+            // --- HOLD
+            else if (phase === "hold") {
+              setTypedOnly(fullText, true);
+
+              if (elapsed >= 250) {
+                phase = "out";
                 nudge.t0 = t;
               }
-            } else if (nudge.phase === "out") {
-              const p = Math.min(1, elapsed / NUDGE_OUT_MS);
-              const keep = Math.max(0, Math.floor((1 - p) * NUDGE_MSG.length));
-              let out = "";
-              for (let i = 0; i < NUDGE_MSG.length; i++) {
-                if (i < keep)
-                  out += SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
-                else out += " ";
-              }
-              nudge.text = out;
-              setTypedOnly(nudge.text, true);
-              if (p >= 1) {
-                cancelNudge();
-                setTypedOnly("", false);
-                render(); // one final render is OK to restore the normal prompt state
+            }
+
+            // --- OUT (erase backwards)
+            else if (phase === "out") {
+              const remove = Math.floor(elapsed / 25);
+              const remaining = Math.max(0, fullText.length - remove);
+
+              setTypedOnly(fullText.slice(0, remaining), true);
+
+              if (remaining <= 0) {
+                stepIndex++;
+                if (stepIndex >= sequence.length) {
+                  cancelNudge();
+                  setTypedOnly("", false);
+                  render();
+                  return;
+                }
+                phase = "in";
+                nudge.t0 = t;
               }
             }
 
@@ -553,8 +579,7 @@
           for (const item of history) lines.push(item);
 
           lines.push(
-            `<span class="line">${promptHTML()}<span id="typed">${esc(current)}</span><span class="cursor" aria-hidden="true"></span></span>` +
-              (!hasFocusedOnce ? `<span class="line hint">Tap anywhere to type</span>` : ``)
+            `<span class="line">${promptHTML()}<span id="typed">${esc(current)}</span><span class="cursor" aria-hidden="true"></span></span>`
           );
 
           screen.innerHTML = lines.join("\n");
