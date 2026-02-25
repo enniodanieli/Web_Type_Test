@@ -27,6 +27,7 @@
         --accent: #7ee787;
         --warn: #f9c74f;
         --err: #ff6b6b;
+        --nudge: #ff79c6;
 
         --fs-mobile: 14px;
         --fs-desktop: 13px;
@@ -155,7 +156,7 @@
       }
 
       .nudge {
-        color: var(--accent);
+        color: var(--nudge);
         opacity: 0.92;
       }
 
@@ -167,6 +168,9 @@
       }
       .prompt .user {
         color: var(--accent);
+      }
+      .prompt .host {
+        color: var(--warn);
       }
       .prompt .path {
         color: var(--muted);
@@ -311,7 +315,7 @@
         ];
 
         const helpText = [
-          'Available commands:',
+          'Commands',
           '  help          show this message',
           '  whoami        who are you talking to?',
           '  ls            list files',
@@ -576,7 +580,9 @@ const WRAP_TEST_TEXT =
         // === HEADER_END ===
 
         function promptHTML() {
-          return `<span class="prompt"><span class="user">${esc(user)}@${esc(host)}</span>:<span class="path">${esc(cwd)}</span>$</span> `;
+          return `<span class="prompt"><span class="user">${esc(
+            user,
+          )}</span>@<span class="host">${esc(host)}</span>:<span class="path">${esc(cwd)}</span>$</span> `;
         }
 
         function scrollToBottom() {
@@ -669,7 +675,10 @@ const WRAP_TEST_TEXT =
           // === INITIAL_SCREEN_START ===
           lines.push(`<span class="line">${esc(nowLoginLine())}</span>`);
           lines.push(
-            `<span class="line"><span class="accent">Connection</span> established.</span>`,
+            `<span class="line">Connection established.</span>`,
+          );
+          lines.push(
+            `<span class="line">Type a command.</span>`,
           );
           // === INITIAL_SCREEN_END ===
 
