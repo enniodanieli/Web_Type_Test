@@ -30,7 +30,7 @@
 
         --fs-mobile: 14px;
         --fs-desktop: 13px;
-        --lh: 1.45;
+        --lh: 1.25;
         --ls: 0px;
 
         --pad: 18px;
@@ -394,6 +394,7 @@
           return out;
         }
 
+        // === NUDGE_START ===
         function startNudge() {
           if (nudgeUsed) return;
           cancelNudge();
@@ -526,6 +527,8 @@
           nudge.raf = requestAnimationFrame(tick);
         }
 
+        } // === NUDGE_END ===
+
         function esc(s) {
           return s.replace(
             /[&<>"]/g,
@@ -534,6 +537,7 @@
           );
         }
 
+        // === HEADER_START ===
         function nowLoginLine() {
           const d = new Date();
           const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -562,6 +566,8 @@
 
           return `Last session: ${day} ${mon} ${date} ${hh}:${mm}:${ss}`;
         }
+
+        } // === HEADER_END ===
 
         function promptHTML() {
           return `<span class="prompt"><span class="user">${esc(user)}@${esc(host)}</span>:<span class="path">${esc(cwd)}</span>$</span> `;
@@ -654,10 +660,12 @@
           }
 
           const lines = [];
+          // === INITIAL_SCREEN_START ===
           lines.push(`<span class="line">${esc(nowLoginLine())}</span>`);
           lines.push(
             `<span class="line"><span class="accent">Connection</span> established.</span>`,
           );
+          // === INITIAL_SCREEN_END ===
 
           for (const item of history) lines.push(item);
 
