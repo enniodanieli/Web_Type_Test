@@ -2,13 +2,16 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
     <title>Sol Mono — Terminal Demo (v1.1)</title>
 
     <style>
       @font-face {
-        font-family: "SolMono";
-        src: url("./Sol-Regular.woff2") format("woff2");
+        font-family: 'SolMono';
+        src: url('./Sol-Regular.woff2') format('woff2');
         font-weight: 400;
         font-style: normal;
         font-display: swap;
@@ -44,13 +47,21 @@
       }
       body {
         background:
-          radial-gradient(1200px 800px at 30% 20%, rgba(126, 231, 135, 0.08), transparent 60%),
-          radial-gradient(900px 600px at 70% 80%, rgba(88, 166, 255, 0.08), transparent 60%),
+          radial-gradient(
+            1200px 800px at 30% 20%,
+            rgba(126, 231, 135, 0.08),
+            transparent 60%
+          ),
+          radial-gradient(
+            900px 600px at 70% 80%,
+            rgba(88, 166, 255, 0.08),
+            transparent 60%
+          ),
           var(--bg);
         color: var(--fg);
         font-family:
-          "SolMono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
-          monospace;
+          'SolMono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+          'Liberation Mono', monospace;
         letter-spacing: var(--ls);
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
@@ -244,7 +255,12 @@
     ></textarea>
 
     <div class="frame">
-      <div class="terminal" id="terminal" role="application" aria-label="Terminal demo">
+      <div
+        class="terminal"
+        id="terminal"
+        role="application"
+        aria-label="Terminal demo"
+      >
         <div class="topbar">
           <div class="dots" aria-hidden="true">
             <div class="dot"></div>
@@ -260,86 +276,87 @@
 
     <script>
       (() => {
-        const terminal = document.getElementById("terminal");
-        const screen = document.getElementById("screen");
-        const kb = document.getElementById("kb");
+        const terminal = document.getElementById('terminal');
+        const screen = document.getElementById('screen');
+        const kb = document.getElementById('kb');
 
-        const host = "localhost";
-        const user = "guest";
-        const cwd = "~";
-        const version = "Sol Mono v0.MOTHER>";
+        const host = 'machine';
+        const user = 'guest';
+        const cwd = '~';
+        const version = 'Sol Mono v0.MOTHER>';
 
         const files = [
-          { name: "README.md", size: "3.1K", modified: "Feb 23 17:14" },
-          { name: "specimen.txt", size: "2.4K", modified: "Feb 22 21:08" },
-          { name: "notes.txt", size: "1.2K", modified: "Feb 20 09:19" },
-          { name: "index.html", size: "9.8K", modified: "Feb 23 17:21" }
+          { name: 'README.md', size: '3.1K', modified: 'Feb 23 17:14' },
+          { name: 'specimen.txt', size: '2.4K', modified: 'Feb 22 21:08' },
+          { name: 'notes.txt', size: '1.2K', modified: 'Feb 20 09:19' },
+          { name: 'index.html', size: '9.8K', modified: 'Feb 23 17:21' },
         ];
 
         const gitCommits = [
           {
-            hash: "9f3a2c1",
-            date: "2026-02-23",
-            msg: "prototype: inline terminal input on mobile"
+            hash: '9f3a2c1',
+            date: '2026-02-23',
+            msg: 'prototype: inline terminal input on mobile',
           },
           {
-            hash: "71c4b0e",
-            date: "2026-02-22",
-            msg: "layout: basic terminal frame + theme"
+            hash: '71c4b0e',
+            date: '2026-02-22',
+            msg: 'layout: basic terminal frame + theme',
           },
           {
-            hash: "4a8d11c",
-            date: "2026-02-21",
-            msg: "font: woff2 export + fallback stack"
-          }
+            hash: '4a8d11c',
+            date: '2026-02-21',
+            msg: 'font: woff2 export + fallback stack',
+          },
         ];
 
         const helpText = [
-          "Available commands:",
-          "  help          show this message",
-          "  whoami        who are you talking to?",
-          "  ls            list files",
-          "  git log       view commit history",
-          "  clear         clear screen",
-          "",
-          "Tip: tap anywhere to focus. Type a command and press Enter."
-        ].join("\n");
+          'Available commands:',
+          '  help          show this message',
+          '  whoami        who are you talking to?',
+          '  ls            list files',
+          '  git log       view commit history',
+          '  clear         clear screen',
+          '',
+          'Tip: tap anywhere to focus. Type a command and press Enter.',
+        ].join('\n');
 
-        let current = "";
+        let current = '';
         let isAtBottom = true;
         let hasFocusedOnce = false;
         const history = [];
         let typedEl = null;
 
         // --- Idle nudge (Nudge #1 only) ---
-        const NUDGE_DELAY_MS = 2000; // testing
-        const NUDGE_PART1 = "Hey :-)";
-        const NUDGE_PART1_GRIN = "Hey :-D";
-        const NUDGE_PART2 = "Tap here";
+        const NUDGE_DELAY_MS = 5000; // first nudge after 5s
+        const NUDGE_PART1 = 'Hey :-)';
+        const NUDGE_PART1_GRIN = 'Hey :-D';
+        const NUDGE_PART2 = 'Tap here';
         const NUDGE_IN_SPEED = 40; // ms per char (fast)
         const NUDGE_PAUSE1_MS = 1400; // longer pause after part 1
         const NUDGE_HOLD_MS = 1600;
         const NUDGE_OUT_MS = 420;
 
-        const SCRAMBLE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#$%&*+-/\\=_:;?";
+        const SCRAMBLE_CHARS =
+          'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#$%&*+-/\\=_:;?';
 
         let idleTimer = null;
         let nudgeUsed = false;
 
         const nudge = {
           active: false,
-          phase: "in", // "in" | "hold" | "out"
-          text: "",
+          phase: 'in', // "in" | "hold" | "out"
+          text: '',
           raf: 0,
-          t0: 0
+          t0: 0,
         };
 
         function cancelNudge() {
           if (!nudge.active) return;
           if (nudge.raf) cancelAnimationFrame(nudge.raf);
           nudge.active = false;
-          nudge.phase = "in";
-          nudge.text = "";
+          nudge.phase = 'in';
+          nudge.text = '';
           nudge.raf = 0;
           nudge.t0 = 0;
         }
@@ -348,7 +365,8 @@
           if (idleTimer) clearTimeout(idleTimer);
           if (nudgeUsed) return; // only one nudge for now
           idleTimer = setTimeout(() => {
-            if (current.length === 0 && document.activeElement !== kb) startNudge();
+            if (current.length === 0 && document.activeElement !== kb)
+              startNudge();
           }, NUDGE_DELAY_MS);
         }
 
@@ -358,7 +376,7 @@
           const n = target.length;
           const visible = Math.max(1, Math.ceil(progress * n));
 
-          let out = "";
+          let out = '';
           const lockedCount = Math.max(0, visible - 1);
 
           for (let i = 0; i < lockedCount; i++) out += target[i];
@@ -366,7 +384,11 @@
           const newestIndex = visible - 1;
           if (newestIndex < n) {
             if (progress >= 1) out += target[newestIndex];
-            else out += SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)];
+            else
+              out +=
+                SCRAMBLE_CHARS[
+                  Math.floor(Math.random() * SCRAMBLE_CHARS.length)
+                ];
           }
 
           return out;
@@ -377,15 +399,22 @@
           cancelNudge();
           nudgeUsed = true;
 
-          // Ghost command suggestions (no execution)
-          const sequence = [
-            { text: "help" },
-            { text: "whoami" },
-            { text: "ls" }
+          // Phase 1 (keep exactly as current)
+          const phase1 = [
+            { text: 'help' },
+            { text: 'git log' },
+            { text: 'whoami' },
           ];
 
+          // Phase 2 (same style, slower/heavier)
+          const phase2Text = 'help';
+          const phase2Cycles = 3;
+          const phaseGapMs = 5000; // wait 5s before phase 2
+
+          let stage = 'phase1'; // phase1 | gap | phase2
           let stepIndex = 0;
-          let phase = "in"; // in | hold | out
+          let cycle = 0;
+          let phase = 'in'; // in | hold | out
 
           nudge.active = true;
           nudge.t0 = performance.now();
@@ -393,52 +422,101 @@
           const tick = (t) => {
             if (!nudge.active) return;
 
-            const currentStep = sequence[stepIndex];
-            const fullText = currentStep.text;
             const elapsed = t - nudge.t0;
 
-            // --- IN (realistic typing speed)
-            if (phase === "in") {
-              const chars = Math.min(
-                fullText.length,
-                Math.floor(elapsed / 30)
-              );
+            // -------------------------
+            // PHASE 1 (fast ghosts)
+            // -------------------------
+            if (stage === 'phase1') {
+              const currentStep = phase1[stepIndex];
+              const fullText = currentStep.text;
 
-              setTypedOnly(fullText.slice(0, chars), true);
+              if (phase === 'in') {
+                const chars = Math.min(
+                  fullText.length,
+                  Math.floor(elapsed / 30),
+                );
+                setTypedOnly(fullText.slice(0, chars), true);
 
-              if (chars >= fullText.length) {
-                phase = "hold";
-                nudge.t0 = t;
-              }
-            }
-
-            // --- HOLD
-            else if (phase === "hold") {
-              setTypedOnly(fullText, true);
-
-              if (elapsed >= 250) {
-                phase = "out";
-                nudge.t0 = t;
-              }
-            }
-
-            // --- OUT (erase backwards)
-            else if (phase === "out") {
-              const remove = Math.floor(elapsed / 25);
-              const remaining = Math.max(0, fullText.length - remove);
-
-              setTypedOnly(fullText.slice(0, remaining), true);
-
-              if (remaining <= 0) {
-                stepIndex++;
-                if (stepIndex >= sequence.length) {
-                  cancelNudge();
-                  setTypedOnly("", false);
-                  render();
-                  return;
+                if (chars >= fullText.length) {
+                  phase = 'hold';
+                  nudge.t0 = t;
                 }
-                phase = "in";
+              } else if (phase === 'hold') {
+                setTypedOnly(fullText, true);
+
+                if (elapsed >= 250) {
+                  phase = 'out';
+                  nudge.t0 = t;
+                }
+              } else if (phase === 'out') {
+                const remove = Math.floor(elapsed / 25);
+                const remaining = Math.max(0, fullText.length - remove);
+                setTypedOnly(fullText.slice(0, remaining), true);
+
+                if (remaining <= 0) {
+                  stepIndex++;
+                  if (stepIndex >= phase1.length) {
+                    // switch to a short gap, then phase 2
+                    stage = 'gap';
+                    phase = 'in';
+                    nudge.t0 = t;
+                    setTypedOnly('', true);
+                  }
+                  phase = 'in';
+                  nudge.t0 = t;
+                }
+              }
+            } else if (stage === 'gap') {
+              // wait a bit so phase 2 reads as a second thought
+              setTypedOnly('', true);
+              if (elapsed >= phaseGapMs) {
+                stage = 'phase2';
+                phase = 'in';
                 nudge.t0 = t;
+              }
+            }
+
+            // -------------------------
+            // PHASE 2 (repeat help)
+            // -------------------------
+            else if (stage === 'phase2') {
+              const fullText = phase2Text;
+
+              if (phase === 'in') {
+                const chars = Math.min(
+                  fullText.length,
+                  Math.floor(elapsed / 55),
+                );
+                setTypedOnly(fullText.slice(0, chars), true);
+
+                if (chars >= fullText.length) {
+                  phase = 'hold';
+                  nudge.t0 = t;
+                }
+              } else if (phase === 'hold') {
+                setTypedOnly(fullText, true);
+
+                if (elapsed >= 650) {
+                  phase = 'out';
+                  nudge.t0 = t;
+                }
+              } else if (phase === 'out') {
+                const remove = Math.floor(elapsed / 45);
+                const remaining = Math.max(0, fullText.length - remove);
+                setTypedOnly(fullText.slice(0, remaining), true);
+
+                if (remaining <= 0) {
+                  cycle++;
+                  if (cycle >= phase2Cycles) {
+                    cancelNudge();
+                    setTypedOnly('', false);
+                    render();
+                    return;
+                  }
+                  phase = 'in';
+                  nudge.t0 = t;
+                }
               }
             }
 
@@ -451,40 +529,38 @@
         function esc(s) {
           return s.replace(
             /[&<>"]/g,
-            (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]
+            (c) =>
+              ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c],
           );
         }
 
         function nowLoginLine() {
           const d = new Date();
-          const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+          const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
           const mons = [
-            "Jan",
-            "Feb",
-            "Mar",
-            "Apr",
-            "May",
-            "Jun",
-            "Jul",
-            "Aug",
-            "Sep",
-            "Oct",
-            "Nov",
-            "Dec"
+            'Jan',
+            'Feb',
+            'Mar',
+            'Apr',
+            'May',
+            'Jun',
+            'Jul',
+            'Aug',
+            'Sep',
+            'Oct',
+            'Nov',
+            'Dec',
           ];
+
           const day = days[d.getDay()];
           const mon = mons[d.getMonth()];
-          const date = String(d.getDate()).padStart(2, "0");
+          const date = String(d.getDate()).padStart(2, '0');
 
-          let h = d.getHours();
-          const ampm = h >= 12 ? "PM" : "AM";
-          h = h % 12;
-          if (h === 0) h = 12;
-          const hh = String(h).padStart(2, "0");
-          const mm = String(d.getMinutes()).padStart(2, "0");
-          const ss = String(d.getSeconds()).padStart(2, "0");
+          const hh = String(d.getHours()).padStart(2, '0');
+          const mm = String(d.getMinutes()).padStart(2, '0');
+          const ss = String(d.getSeconds()).padStart(2, '0');
 
-          return `Last login: ${day}, ${mon} ${date} at ${hh}:${mm}:${ss} ${ampm}`;
+          return `Last session: ${day} ${mon} ${date} ${hh}:${mm}:${ss}`;
         }
 
         function promptHTML() {
@@ -502,22 +578,24 @@
           });
         }
 
-        function printLine(html, cls = "") {
+        function printLine(html, cls = '') {
           const classAttr = cls ? `line ${cls}` : `line`;
           history.push(`<span class="${classAttr}">${html}</span>`);
         }
 
-        function printBlock(text, cls = "") {
+        function printBlock(text, cls = '') {
           const safe = esc(text);
           const lines = safe
-            .split("\n")
-            .map((l) => `<span class="line${cls ? " " + cls : ""}">${l}</span>`);
-          history.push(lines.join("\n"));
+            .split('\n')
+            .map(
+              (l) => `<span class="line${cls ? ' ' + cls : ''}">${l}</span>`,
+            );
+          history.push(lines.join('\n'));
         }
 
         function unknown(cmd) {
           printLine(
-            `<span class="err">command not found:</span> ${esc(cmd)} <span class="dim">(try 'help')</span>`
+            `<span class="err">command not found:</span> ${esc(cmd)} <span class="dim">(try 'help')</span>`,
           );
         }
 
@@ -527,30 +605,34 @@
 
           if (!cmd) return;
 
-          if (cmd === "help") {
-            printBlock(helpText, "dim");
+          if (cmd === 'help') {
+            printBlock(helpText, 'dim');
             return;
           }
-          if (cmd === "whoami") {
+          if (cmd === 'whoami') {
             printLine(`${esc(user)}`);
             return;
           }
 
-          if (cmd === "ls") {
+          if (cmd === 'ls') {
             const out = files
-              .map((f) => `${f.modified}  ${f.size.padStart(4, " ")}  ${f.name}`)
-              .join("\n");
-            printBlock(out, "");
+              .map(
+                (f) => `${f.modified}  ${f.size.padStart(4, ' ')}  ${f.name}`,
+              )
+              .join('\n');
+            printBlock(out, '');
             return;
           }
 
-          if (cmd === "git log") {
-            const out = gitCommits.map((c) => `${c.hash}  ${c.date}  ${c.msg}`).join("\n");
-            printBlock(out, "");
+          if (cmd === 'git log') {
+            const out = gitCommits
+              .map((c) => `${c.hash}  ${c.date}  ${c.msg}`)
+              .join('\n');
+            printBlock(out, '');
             return;
           }
 
-          if (cmd === "clear") {
+          if (cmd === 'clear') {
             history.length = 0;
             return;
           }
@@ -563,34 +645,35 @@
           // iOS can report scroll metrics 1–2px off during keyboard/layout changes,
           // which causes a tiny nudge on the first keystroke.
           if (document.activeElement !== kb) {
-            const nearBottom = screen.scrollTop + screen.clientHeight >= screen.scrollHeight - 12;
+            const nearBottom =
+              screen.scrollTop + screen.clientHeight >=
+              screen.scrollHeight - 12;
             isAtBottom = nearBottom;
           } else {
             isAtBottom = true;
           }
 
           const lines = [];
-          lines.push(`<span class="line dim">${esc(nowLoginLine())}</span>`);
+          lines.push(`<span class="line">${esc(nowLoginLine())}</span>`);
           lines.push(
-            `<span class="line"><span class="accent">${esc(version)}</span> — type <span class="warn">'help'</span> for available commands</span>`
+            `<span class="line"><span class="accent">Connection</span> established.</span>`,
           );
-          lines.push(`<span class="line"></span>`);
 
           for (const item of history) lines.push(item);
 
           lines.push(
-            `<span class="line">${promptHTML()}<span id="typed">${esc(current)}</span><span class="cursor" aria-hidden="true"></span></span>`
+            `<span class="line">${promptHTML()}<span id="typed">${esc(current)}</span><span class="cursor" aria-hidden="true"></span></span>`,
           );
 
-          screen.innerHTML = lines.join("\n");
-          typedEl = document.getElementById("typed");
+          screen.innerHTML = lines.join('\n');
+          typedEl = document.getElementById('typed');
           if (isAtBottom) scrollToBottom();
         }
 
         function setTypedOnly(text, isNudge) {
           if (!typedEl) return;
           typedEl.textContent = text;
-          typedEl.className = isNudge ? "nudge" : "";
+          typedEl.className = isNudge ? 'nudge' : '';
         }
 
         function safeFocus() {
@@ -614,46 +697,49 @@
         }
 
         // ✅ Use click + touchend (Safari-friendly) — NOT passive.
-        terminal.addEventListener("click", (e) => {
+        terminal.addEventListener('click', (e) => {
           // Avoid stealing focus when user is selecting text
-          if (window.getSelection && String(window.getSelection()) !== "") return;
+          if (window.getSelection && String(window.getSelection()) !== '')
+            return;
           safeFocus();
         });
 
         terminal.addEventListener(
-          "touchend",
+          'touchend',
           (e) => {
             // Prevent the “ghost click” double-trigger on some setups
             // but still allow scroll gestures (touchend is fine)
             safeFocus();
           },
-          { passive: false }
+          { passive: false },
         );
 
         screen.addEventListener(
-          "scroll",
+          'scroll',
           () => {
             cancelNudge();
             resetIdleTimer();
-            const nearBottom = screen.scrollTop + screen.clientHeight >= screen.scrollHeight - 12;
+            const nearBottom =
+              screen.scrollTop + screen.clientHeight >=
+              screen.scrollHeight - 12;
             isAtBottom = nearBottom;
           },
-          { passive: true }
+          { passive: true },
         );
 
-        kb.addEventListener("input", () => {
+        kb.addEventListener('input', () => {
           cancelNudge();
           resetIdleTimer();
           current = kb.value;
           render();
         });
 
-        kb.addEventListener("keydown", (e) => {
-          if (e.key === "Enter") {
+        kb.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
             e.preventDefault();
             const toRun = current;
-            current = "";
-            kb.value = "";
+            current = '';
+            kb.value = '';
             runCommand(toRun);
             render();
             scrollToBottom();
@@ -668,7 +754,7 @@
             const diff = window.innerHeight - vv.height - vv.offsetTop;
             kbPx = Math.max(0, Math.round(diff));
           }
-          document.documentElement.style.setProperty("--kb", kbPx + "px");
+          document.documentElement.style.setProperty('--kb', kbPx + 'px');
           if (document.activeElement === kb) {
             scrollToBottom();
           } else if (isAtBottom) {
@@ -677,10 +763,10 @@
         }
 
         if (window.visualViewport) {
-          window.visualViewport.addEventListener("resize", updateKeyboardInset);
-          window.visualViewport.addEventListener("scroll", updateKeyboardInset);
+          window.visualViewport.addEventListener('resize', updateKeyboardInset);
+          window.visualViewport.addEventListener('scroll', updateKeyboardInset);
         }
-        window.addEventListener("resize", updateKeyboardInset);
+        window.addEventListener('resize', updateKeyboardInset);
 
         // Init
         updateKeyboardInset();
