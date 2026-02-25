@@ -1,21 +1,3 @@
-<file name=chatgpt_test.html>{
-  ...
-  const helpText = [
-    ...
-  ].join("\n");
-
-        // TEMP: wrap/spacing stress test (remove later)
-        const SHOW_WRAP_TEST = true;
-        const wrapTestText = "This is a temporary text block to stress-test line height, padding, and natural wrapping on mobile. It should wrap by itself without forced line breaks, so we can judge the vertical rhythm and the overall density of the typeface at small sizes. If this looks gigantic, we will tighten line-height and possibly adjust font metrics or padding next.";
-
-  ...
-  function render() {
-    ...
-    lines.push(
-            `<span class="line">${promptHTML()}<span id="typed">${esc(typed)}</span><span class="cursor">${cursor}</span></span>`
-          );
-          if (SHOW_WRAP_TEST) {
-            lines.push(`<span class="line">${esc(wrapTestText)}</span>`);
-          }
-  ...
+{
+  "editor.formatOnSave": false
 }

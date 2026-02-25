@@ -527,7 +527,7 @@
           nudge.raf = requestAnimationFrame(tick);
         }
 
-        } // === NUDGE_END ===
+        // === NUDGE_END ===
 
         function esc(s) {
           return s.replace(
@@ -567,7 +567,7 @@
           return `Last session: ${day} ${mon} ${date} ${hh}:${mm}:${ss}`;
         }
 
-        } // === HEADER_END ===
+        // === HEADER_END ===
 
         function promptHTML() {
           return `<span class="prompt"><span class="user">${esc(user)}@${esc(host)}</span>:<span class="path">${esc(cwd)}</span>$</span> `;
