@@ -30,7 +30,7 @@
 
         --fs-mobile: 14px;
         --fs-desktop: 13px;
-        --lh: 1.25;
+        --lh: 1.5;
         --ls: 0px;
 
         --pad: 18px;
@@ -321,6 +321,12 @@
           'Tip: tap anywhere to focus. Type a command and press Enter.',
         ].join('\n');
 
+        // === WRAP_TEST_START ===
+const SHOW_WRAP_TEST = false;
+const WRAP_TEST_TEXT =
+  "This is a long-form text block used to stress-test spacing, punctuation, and natural wrapping on small screens. It should wrap without forced line breaks so we can judge the vertical rhythm and density of the typeface at terminal sizes. Notice commas, periods, apostrophes, parentheses (like this), dashes — and how numbers behave: 0123456789. Also watch how URLs and paths break: /Users/guest/Documents/notes and https://example.com/some/really/long/path. If this still feels huge, we’ll tighten padding or revisit the font’s vertical metrics next.";
+// === WRAP_TEST_END ===
+
         let current = '';
         let isAtBottom = true;
         let hasFocusedOnce = false;
@@ -596,7 +602,7 @@
             .map(
               (l) => `<span class="line${cls ? ' ' + cls : ''}">${l}</span>`,
             );
-          history.push(lines.join('\n'));
+          history.push(lines.join(''));
         }
 
         function unknown(cmd) {
@@ -672,8 +678,11 @@
           lines.push(
             `<span class="line">${promptHTML()}<span id="typed">${esc(current)}</span><span class="cursor" aria-hidden="true"></span></span>`,
           );
+          if (SHOW_WRAP_TEST) {
+            lines.push(`<span class="line">${esc(WRAP_TEST_TEXT)}</span>`);
+          }
 
-          screen.innerHTML = lines.join('\n');
+          screen.innerHTML = lines.join('');
           typedEl = document.getElementById('typed');
           if (isAtBottom) scrollToBottom();
         }
