@@ -74,6 +74,24 @@
         font-size: var(--fs-mobile);
         line-height: var(--lh);
       }
+
+      .statusbar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 6px 10px;
+        border-top: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.35);
+        font-size: 0.9em;
+        color: var(--muted);
+        display: flex;
+        justify-content: space-between;
+        pointer-events: none;
+      }
+      .statusbar[hidden] {
+        display: none !important;
+      }
       @media (min-width: 820px) {
         body {
           font-size: var(--fs-desktop);
@@ -208,6 +226,26 @@
         }
       }
 
+      .tok-kw {
+        color: var(--warn);
+      }
+      .tok-fn {
+        color: rgba(126, 231, 135, 0.95);
+      }
+      .tok-str {
+        color: rgba(255, 121, 198, 0.95);
+      }
+      .tok-num {
+        color: rgba(88, 166, 255, 0.95);
+      }
+      .tok-com {
+        color: var(--muted);
+        opacity: 0.9;
+      }
+      .tok-op {
+        color: rgba(215, 224, 234, 0.9);
+      }
+
       /* ✅ Hidden keyboard input:
        Keep it focusable + on-screen (1px), to satisfy Safari/iOS. */
       textarea#kb {
@@ -292,6 +330,7 @@
         </div>
 
         <div class="screen" id="screen" aria-live="polite"></div>
+<div class="statusbar" id="statusbar" hidden>EDIT MODE <span>:q to quit</span></div>
       </div>
     </div>
 
@@ -299,7 +338,9 @@
       (() => {
         const terminal = document.getElementById('terminal');
         const screen = document.getElementById('screen');
+        const statusbar = document.getElementById('statusbar');
         const kb = document.getElementById('kb');
+        if (statusbar) statusbar.hidden = true;
 
         const host = 'machine';
         const user = 'guest';
@@ -310,6 +351,7 @@
           { name: 'README.md', size: '3.1K', modified: 'Feb 23 17:14' },
           { name: 'specimen.txt', size: '2.4K', modified: 'Feb 22 21:08' },
           { name: 'notes.txt', size: '1.2K', modified: 'Feb 20 09:19' },
+          { name: 'sketch.js', size: '1.6K', modified: 'Feb 26 18:02' },
           { name: 'index.html', size: '9.8K', modified: 'Feb 23 17:21' },
         ];
 
@@ -317,6 +359,21 @@
           'README.md': 'Terminal prototype.\n\nType help to see available commands.',
           'specimen.txt': 'Specimen preview.\nABCDEFGHIJKLMNOPQRSTUVWXYZ\n0123456789',
           'notes.txt': 'Notes:\nRefine spacing. Refine colour. Keep it dry.',
+          'sketch.js': `function setup() {
+  createCanvas(400, 400);
+}
+
+function draw() {
+  background(10);
+  stroke(255);
+  fill(200, 80, 120);
+  circle(mouseX, mouseY, 40);
+
+  if (mouseIsPressed) {
+    rect(width / 2 - 50, height / 2 - 50, 100, 100);
+  }
+}
+`,
           'index.html': '<!doctype html> ...',
         };
 
@@ -342,8 +399,10 @@
           { cmd: 'help', desc: 'show this message' },
           { cmd: 'whoami', desc: 'who are you talking to?' },
           { cmd: 'ls', desc: 'list files' },
+          { cmd: 'cat FILE', desc: 'read a file' },
           { cmd: 'git log', desc: 'view commit history' },
           { cmd: 'clear', desc: 'clear screen' },
+          { cmd: 'specimen', desc: 'run specimen utility' },
         ];
 
         // === WRAP_TEST_START ===
@@ -354,9 +413,9 @@ const WRAP_TEST_TEXT =
 
         let current = '';
         let isAtBottom = true;
-        let hasFocusedOnce = false;
         const history = [];
         let typedEl = null;
+        let isEditMode = false;
 
         // --- Idle nudge (Nudge #1 only) ---
         const NUDGE_DELAY_MS = 5000; // first nudge after 5s
@@ -647,66 +706,221 @@ const WRAP_TEST_TEXT =
           }
         }
 
-        function runCommand(raw) {
-          const cmd = raw.trim();
-          printLine(`${promptHTML()}${esc(raw)}`);
-
-          if (!cmd) return;
-
-          if (cmd === 'help') {
-            printHelp();
-            return;
-          }
-          if (cmd === 'whoami') {
-            printLine(`${esc(user)}`);
-            return;
-          }
-
-          if (cmd === 'ls') {
-            const out = files
-              .map(
-                (f) => `${f.modified}  ${f.size.padStart(4, ' ')}  ${f.name}`,
-              )
-              .join('\n');
-            printBlock(out, '');
-            return;
-          }
-
-          if (cmd === 'git log') {
-            const out = gitCommits
-              .map((c) => `${c.hash}  ${c.date}  ${c.msg}`)
-              .join('\n');
-            printBlock(out, '');
-            return;
-          }
-
-          if (cmd.startsWith('cat')) {
-            const parts = raw.trim().split(/\s+/);
-
-            if (parts.length === 1) {
-              printLine('cat: missing file operand');
-              printLine("Try 'ls'.");
-              return;
-            }
-
-            const filename = parts.slice(1).join(' ');
-
-            if (!fileContents[filename]) {
-              printLine(`cat: ${esc(filename)}: No such file`);
-              return;
-            }
-
-            printBlock(fileContents[filename]);
-            return;
-          }
-
-          if (cmd === 'clear') {
-            history.length = 0;
-            return;
-          }
-
-          unknown(cmd);
+        function printHTMLBlock(htmlLines) {
+          // htmlLines: array of already-escaped HTML lines
+          const lines = htmlLines.map((l) => `<span class="line">${l}</span>`);
+          history.push(lines.join(''));
         }
+
+        function highlightJS(code) {
+          const kw = new Set([
+            'function',
+            'return',
+            'if',
+            'else',
+            'for',
+            'while',
+            'const',
+            'let',
+            'var',
+            'new',
+            'true',
+            'false',
+            'null',
+          ]);
+
+          const outLines = [];
+          const lines = code.replace(/\r\n/g, '\n').split('\n');
+
+          for (const line of lines) {
+            let i = 0;
+            let html = '';
+
+            while (i < line.length) {
+              const ch = line[i];
+
+              // Line comment
+              if (ch === '/' && line[i + 1] === '/') {
+                const rest = line.slice(i);
+                html += `<span class="tok-com">${esc(rest)}</span>`;
+                i = line.length;
+                break;
+              }
+
+              // Strings: ', ", `
+              if (ch === '"' || ch === "'" || ch === '`') {
+                const quote = ch;
+                let j = i + 1;
+                let closed = false;
+                while (j < line.length) {
+                  const cj = line[j];
+                  if (cj === '\\') {
+                    j += 2;
+                    continue;
+                  }
+                  if (cj === quote) {
+                    j++;
+                    closed = true;
+                    break;
+                  }
+                  j++;
+                }
+                const token = line.slice(i, j);
+                html += `<span class="tok-str">${esc(token)}</span>`;
+                i = j;
+                continue;
+              }
+
+              // Numbers
+              if (/[0-9]/.test(ch)) {
+                let j = i + 1;
+                while (j < line.length && /[0-9.]/.test(line[j])) j++;
+                html += `<span class="tok-num">${esc(line.slice(i, j))}</span>`;
+                i = j;
+                continue;
+              }
+
+              // Identifiers / keywords
+              if (/[A-Za-z_$]/.test(ch)) {
+                let j = i + 1;
+                while (j < line.length && /[A-Za-z0-9_$]/.test(line[j])) j++;
+                const word = line.slice(i, j);
+
+                if (kw.has(word)) {
+                  html += `<span class="tok-kw">${esc(word)}</span>`;
+                  i = j;
+                  continue;
+                }
+
+                // Function name after `function `
+                // (cheap heuristic: if previous non-space token is 'function')
+                let k = i - 1;
+                while (k >= 0 && line[k] === ' ') k--;
+                const before = line.slice(0, i);
+                const isFn = /\bfunction\s+$/.test(before);
+                if (isFn) {
+                  html += `<span class="tok-fn">${esc(word)}</span>`;
+                } else {
+                  html += esc(word);
+                }
+
+                i = j;
+                continue;
+              }
+
+              // Operators / punctuation (just lightly tinted)
+              if (/[][(){}.,;:+\-*/=<>!]/.test(ch)) {
+                html += `<span class="tok-op">${esc(ch)}</span>`;
+                i++;
+                continue;
+              }
+
+              // Everything else (spaces etc.)
+              html += esc(ch);
+              i++;
+            }
+
+            outLines.push(html);
+          }
+
+          return outLines;
+        }
+
+        function runCommand(raw) {
+  const input = raw.trim();
+  printLine(`${promptHTML()}${esc(raw)}`);
+
+  if (!input) return;
+
+  const parts = input.split(/\s+/);
+  const head = (parts[0] || '').toLowerCase();
+  const lower = input.toLowerCase();
+
+  if (head === 'help') {
+    printHelp();
+    return;
+  }
+
+  if (head === 'specimen') {
+    printBlock(`
+Pinkslap 0.1
+(working title)
+
+ABCDEFGHIJKLMNOPQRSTUVWXYZ
+abcdefghijklmnopqrstuvwxyz
+0123456789
+.,:;!?*# /\\-—_(){}[]"'@&|$+−=><~^%\`´
+`);
+    return;
+  }
+
+  // === EDIT MODE BLOCK ===
+  if (head === 'edit') {
+    isEditMode = true;
+    current = '';
+    kb.value = '';
+    render();
+    scrollToBottom();
+    return;
+  }
+
+  if (head === 'whoami') {
+    printLine(`${esc(user)}`);
+    return;
+  }
+
+  if (head === 'ls') {
+    const out = files
+      .map((f) => `${f.modified}  ${f.size.padStart(4, ' ')}  ${f.name}`)
+      .join('\n');
+    printBlock(out, '');
+    return;
+  }
+
+  if (lower === 'git log') {
+    const out = gitCommits.map((c) => `${c.hash}  ${c.date}  ${c.msg}`).join('\n');
+    printBlock(out, '');
+    return;
+  }
+
+  if (head === 'cat') {
+    if (parts.length === 1) {
+      printLine('cat: missing file operand');
+      printLine("Try 'ls'.");
+      return;
+    }
+
+    const filename = parts.slice(1).join(' ');
+
+    // Exact match first
+    let key = filename;
+
+    // Case-insensitive fallback (mobile-friendly)
+    if (!fileContents[key]) {
+      const want = filename.toLowerCase();
+      key = Object.keys(fileContents).find((k) => k.toLowerCase() === want);
+    }
+
+    if (!key || !fileContents[key]) {
+      printLine(`cat: ${esc(filename)}: No such file`);
+      return;
+    }
+
+    if (key === 'sketch.js') {
+      printHTMLBlock(highlightJS(fileContents[key]));
+    } else {
+      printBlock(fileContents[key]);
+    }
+    return;
+  }
+
+  if (head === 'clear') {
+    history.length = 0;
+    return;
+  }
+
+  unknown(input);
+}
 
         function render() {
           // While typing (kb focused), keep the terminal pinned.
@@ -734,9 +948,20 @@ const WRAP_TEST_TEXT =
 
           for (const item of history) lines.push(item);
 
-          lines.push(
-            `<span class="line">${promptHTML()}<span id="typed">${esc(current)}</span><span class="cursor" aria-hidden="true"></span></span>`,
-          );
+          if (isEditMode) {
+            lines.push(`<span class="line dim">-- EDIT MODE --</span>`);
+            lines.push(
+              `<span class="line">${esc(current)}<span class="cursor" aria-hidden="true"></span></span>`,
+            );
+          } else {
+            lines.push(
+              `<span class="line">${promptHTML()}<span id="typed">${esc(current)}</span><span class="cursor" aria-hidden="true"></span></span>`,
+            );
+          }
+
+          // Toggle fixed status bar outside scroll area
+          if (statusbar) statusbar.hidden = !isEditMode;
+
           if (SHOW_WRAP_TEST) {
             lines.push(`<span class="line">${esc(WRAP_TEST_TEXT)}</span>`);
           }
@@ -755,7 +980,6 @@ const WRAP_TEST_TEXT =
         function safeFocus() {
           cancelNudge();
           resetIdleTimer();
-          hasFocusedOnce = true;
           // When user taps to type, we behave like a real terminal: keep the prompt pinned.
           isAtBottom = true;
 
@@ -811,16 +1035,37 @@ const WRAP_TEST_TEXT =
         });
 
         kb.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            const toRun = current;
-            current = '';
-            kb.value = '';
-            runCommand(toRun);
-            render();
-            scrollToBottom();
-          }
-        });
+  if (e.key === 'Enter') {
+    e.preventDefault();
+
+    if (isEditMode) {
+  const linesNow = current.replace(/\r\n/g, '\n').split('\n');
+  const lastLine = (linesNow[linesNow.length - 1] || '').trim();
+
+  if (lastLine === ':q') {
+    linesNow.pop();               // remove the :q line
+    current = linesNow.join('\n'); // keep whatever was typed
+    isEditMode = false;
+    kb.value = '';
+    render();
+    return;
+  }
+
+  current += '\n';
+  kb.value = current;
+  render();
+  scrollToBottom();
+  return;
+}
+
+    const toRun = current;
+    current = '';
+    kb.value = '';
+    runCommand(toRun);
+    render();
+    scrollToBottom();
+  }
+});
 
         function updateKeyboardInset() {
           const vv = window.visualViewport;
